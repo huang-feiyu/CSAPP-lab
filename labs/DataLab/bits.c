@@ -259,7 +259,11 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4
  */
 int logicalNeg(int x) {
-    return 2;
+    /* sign(x) | sign(-x) == 0 iff x == 0
+     *  * 0: (x | -x) >> 31 = 0 => ++ => 0x1
+     *  * other: (x | -x) >> 31 = 0xFFFFFFFF => ++ => 0x0 (overflow)
+     */
+    return ((x | (~x + 1)) >> 31) + 1;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -274,7 +278,28 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-    return 0;
+    /* b# <- # or 0 => represents high-bits
+     * if b16 == 0:                                    donot care high 16 bits
+     * else       : b16=16, throw away high 16 bits => donot care high 16 bits
+     * ... (the same with other bits)
+     */
+    int sign, b16, b8, b4, b2, b1;
+    sign = x >> 31;
+    x = (sign & ~x) | (~sign & x);
+
+    // dichotomy
+    b16 = !!(x >> 16) << 4;
+    x >>= b16;
+    b8 = !!(x >> 8) << 3;
+    x >>= b8;
+    b4 = !!(x >> 4) << 2;
+    x >>= b4;
+    b2 = !!(x >> 2) << 1;
+    x >>= b2;
+    b1 = !!(x >> 1) << 0;
+    x >>= b1;
+
+    return x + b16 + b8 + b4 + b2 + b1 + 1;
 }
 // float
 /*

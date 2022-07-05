@@ -18,3 +18,6 @@
 * `isAsciiDigit`: 两数相减(使用 `negate`)判断符号位
 * `conditional`: `?:` 对 0 取 `0x000000000` 与 `0xFFFFFFFF`, 分别与 y 和 z 相与
 * `isLessOrEqual`: 先判断符号位, 再通过 `isAsciiDigit` 中方法判断是否小于等于
+* `logicalNeg`: 根据 0 与 -0 符号位相同且为 0, 将符号位右移 31 位获得 `0xFFFFFFFF` 或 `0x00000000`, 自增 (一个溢出)
+* `howManyBits`: 先将负数转换为与正数相同表示方法的数值, 后使用二分法求解 (本题只懂得一个大概)
+  * I cannot do this myself
