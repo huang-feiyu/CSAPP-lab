@@ -137,7 +137,6 @@ NOTES:
  */
 int bitXor(int x, int y) {
     /* x^y = ~(~(x & ~(x&y)) & ~(y & ~(x&y))) */
-    // idea from: https://i.stack.imgur.com/3YG4z.png
     int not_x_y = ~(x & y);
     return ~(~(x & not_x_y) & ~(y & not_x_y));
 }
@@ -151,19 +150,21 @@ int tmin(void) {
     /* -2^(32-1) = -2147483648 */
     return 0x1 << 31;
 }
-// 2
 /*
- * isTmax - returns 1 if x is the maximum, two's complement number,
- *     and 0 otherwise
+ * isTmax - returns 1 if x is the maximum, two's complement number, and 0 otherwise
  *   Legal ops: ! ~ & ^ | +
  *   Max ops: 10
  *   Rating: 1
  */
 int isTmax(int x) {
-    /* return 0x7fffffff & x */
-    // TODO:
-    return x == 0x7fffffff;
+    /* !(x ^ (x + 1)) => x == {0b'*,0b7FFFFFFF} ? 1 : 0
+     * !!y => x == 0xFFFFFFFF, !!y=0
+     *        x == 0x7FFFFFFF, !!y=1
+     */
+    int y = x + 1;
+    return !(x ^ ~y) & !!y;
 }
+// 2
 /*
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
  *   where bits are numbered from 0 (least significant) to 31 (most significant)
@@ -173,7 +174,11 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-    return 2;
+    /* is x's odd-bits equals to 0xAAAAAAAA */
+    int quarter = 0xAA;
+    int half = quarter + (quarter << 8);
+    int all = half + (half << 16);
+    return !((all & x) ^ all);
 }
 /*
  * negate - return -x
@@ -183,7 +188,8 @@ int allOddBits(int x) {
  *   Rating: 2
  */
 int negate(int x) {
-    return 2;
+    /* -x <- not x + 1 */
+    return ~x + 1;
 }
 // 3
 /*
@@ -196,7 +202,12 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-    return 2;
+    /* x - 0x30 >= 0 && 0x39 - x >= 0 */
+    // the following code: 0 represents TRUE, 1 represents FALSE
+    int is_neg = !(x >> 31);
+    int is_lesser_than_0x30 = !((x + (~0x30 + 1)) >> 31);
+    int is_greater_than_0x39 = !((0x39 + (~x + 1)) >> 31);
+    return is_neg & is_lesser_than_0x30 & is_greater_than_0x39;
 }
 /*
  * conditional - same as x ? y : z
@@ -206,7 +217,18 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-    return 2;
+    /* x == 0 ? ~0x00000000 & z
+     * x != 0 ?  0xFFFFFFFF & y
+     */
+    // END: x == 0 ? 0x0 : 0xFFFFFFFF
+    int is_x_zero = !!x;
+    is_x_zero += is_x_zero << 1;
+    is_x_zero += is_x_zero << 2;
+    is_x_zero += is_x_zero << 4;
+    is_x_zero += is_x_zero << 8;
+    is_x_zero += is_x_zero << 16;
+
+    return (is_x_zero & y) | (~is_x_zero & z);
 }
 /*
  * isLessOrEqual - if x <= y  then return 1, else return 0
@@ -216,7 +238,16 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-    return 2;
+    /* sign cmp, then x == y | x - y < 0 */
+    int x_sign = !!(x >> 31);
+    int y_sign = !!(y >> 31);
+    int diff_sign = x_sign ^ y_sign;
+
+    int is_equal = !(x ^ y);
+    int x_sub_y = x + (~y + 1);
+    int is_less = !!(x_sub_y >> 31);
+
+    return (diff_sign & !(x_sign ^ 0x1)) | (!diff_sign & (is_equal | is_less));
 }
 // 4
 /*
