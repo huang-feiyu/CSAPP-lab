@@ -21,3 +21,8 @@
 * `logicalNeg`: 根据 0 与 -0 符号位相同且为 0, 将符号位右移 31 位获得 `0xFFFFFFFF` 或 `0x00000000`, 自增 (一个溢出)
 * `howManyBits`: 先将负数转换为与正数相同表示方法的数值, 后使用二分法求解 (本题只懂得一个大概)
   * I cannot do this myself
+* `floatScale2`: 根据指数做出相应操作, 两特殊情况: 指数为 0 或 255; 与一个正常情况
+  * [FloatConverter](https://www.h-schmidt.net/FloatConverter/IEEE754.html)
+* `floatFloat2Int`: 先判断是否过大或者过小, 再判断是否需要舍入(尾数只有 23 位), 最后判断是否需要添加符号位
+  * 参考了别人的才做出来
+* `floatPower2`: 根据指数判断是否过大或过小, 正常情况则左移 23 位

@@ -314,7 +314,18 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
-    return 2;
+    /* decode to get sign and exponent, take action according to the exponent */
+    int exponent, sign;
+    sign = uf & (1 << 31);
+    exponent = (uf >> 23) & 0xFF;
+    // too small a number/denormalized number
+    if (exponent == 0) {
+        return (uf << 1) | sign;
+    }
+    // NaN or infinity
+    exponent += exponent != 255;
+    uf = (uf & 0x807FFFFF) | (exponent << 23);
+    return uf;
 }
 /*
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -329,7 +340,30 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-    return 2;
+    /*    float is too big or too small?
+     * -> need to round?
+     * -> need to add sign?
+     */
+    int exponent, sign, mantissa;
+    sign = uf & (1 << 31);
+    exponent = ((uf >> 23) & 0xFF) - 127;
+    mantissa = (uf & 0x7FFFFF) | 0x800000;
+    // too big
+    if (exponent > 31) {
+        return 0x80000000u;
+    }
+    // too small
+    if (exponent < 0) {
+        return 0;
+    }
+    // mantissa is 23 bit
+    if (exponent < 23) {
+        mantissa >>= 23 - exponent;
+    } else {
+        mantissa <<= exponent - 23;
+    }
+
+    return sign ? ~mantissa + 1 : mantissa;
 }
 /*
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -345,5 +379,15 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+    /* denorm : exponent == 0
+     * middle : exponent << 23 (exponent = x + 127)
+     * too big: exponent == 255
+     */
+    if (x < -127) {
+        return 0;
+    }
+    if (x <= 127) {
+        return (x + 127) << 23;
+    }
+    return 0x7F800000;
 }
