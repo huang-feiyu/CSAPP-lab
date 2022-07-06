@@ -1,6 +1,6 @@
-/* 
- * CS:APP Data Lab 
- * 
+/*
+ * CS:APP Data Lab
+ *
  * btest.c - A test harness that checks a student's solution in bits.c
  *           for correctness.
  *
@@ -10,7 +10,7 @@
  * This is an improved version of btest that tests large windows
  * around zero and tmin and tmax for integer puzzles, and zero, norm,
  * and denorm boundaries for floating point puzzles.
- * 
+ *
  * Note: not 64-bit safe. Always compile with gcc -m32 option.
  */
 #include <stdio.h>
@@ -47,17 +47,17 @@ float strtof(const char *nptr, char **endptr);
 #define MAX_TEST_VALS 13*TEST_RANGE
 
 /**********************************
- * Globals defined in other modules 
+ * Globals defined in other modules
  **********************************/
 /* This characterizes the set of puzzles to test.
    Defined in decl.c and generated from templates in ./puzzles dir */
-extern test_rec test_set[]; 
+extern test_rec test_set[];
 
 /************************************************
  * Write-once globals defined by command line args
  ************************************************/
 
-/* Emit results in a format for autograding, without showing 
+/* Emit results in a format for autograding, without showing
    and counter-examples */
 static int grade = 0;
 
@@ -65,7 +65,7 @@ static int grade = 0;
 static int timeout_limit = TIMEOUT_LIMIT; /* -T */
 
 /* If non-NULL, test only one function (-f) */
-static char* test_fname = NULL;  
+static char* test_fname = NULL;
 
 /* Special case when only use fixed argument(s) (-1, -2, or -3) */
 static int has_arg[3] = {0,0,0};
@@ -83,11 +83,11 @@ static int global_rating = 0;
  */
 typedef void handler_t(int);
 
-handler_t *Signal(int signum, handler_t *handler) 
+handler_t *Signal(int signum, handler_t *handler)
 {
     struct sigaction action, old_action;
 
-    action.sa_handler = handler;  
+    action.sa_handler = handler;
     sigemptyset(&action.sa_mask); /* block sigs of type being handled */
     action.sa_flags = SA_RESTART; /* restart syscalls if possible */
 
@@ -96,16 +96,16 @@ handler_t *Signal(int signum, handler_t *handler)
     return (old_action.sa_handler);
 }
 
-/* 
- * timeout_handler - SIGALARM hander 
+/*
+ * timeout_handler - SIGALARM hander
  */
 sigjmp_buf envbuf;
 void timeout_handler(int sig) {
     siglongjmp(envbuf, 1);
 }
 
-/* 
- * random_val - Return random integer value between min and max 
+/*
+ * random_val - Return random integer value between min and max
  */
 static int random_val(int min, int max)
 {
@@ -114,8 +114,8 @@ static int random_val(int min, int max)
     return result;
 }
 
-/* 
- * gen_vals - Generate the integer values we'll use to test a function 
+/*
+ * gen_vals - Generate the integer values we'll use to test a function
  */
 static int gen_vals(int test_vals[], int min, int max, int test_range, int arg)
 {
@@ -130,7 +130,7 @@ static int gen_vals(int test_vals[], int min, int max, int test_range, int arg)
 	return 1;
     }
 
-    /* 
+    /*
      * Special case: Generate test vals for floating point functions
      * where the input argument is an unsigned bit-level
      * representation of a float. For this case we want to test the
@@ -138,11 +138,11 @@ static int gen_vals(int test_vals[], int min, int max, int test_range, int arg)
      * denormalized numbers, one, and the largest normalized number,
      * as well as inf and nan.
      */
-    if ((min == 1 && max == 1)) { 
+    if ((min == 1 && max == 1)) {
 	unsigned smallest_norm = 0x00800000;
 	unsigned one = 0x3f800000;
 	unsigned largest_norm = 0x7f000000;
-	
+
 	unsigned inf = 0x7f800000;
 	unsigned nan =  0x7fc00000;
 	unsigned sign = 0x80000000;
@@ -152,7 +152,7 @@ static int gen_vals(int test_vals[], int min, int max, int test_range, int arg)
 	if (test_range > (1 << 23)) {
 	    test_range = 1 << 23;
 	}
-	
+
 	/* Functions where the input argument is an unsigned bit-level
 	   representation of a float. The number of tests generated
 	   inside this loop body is the value k referenced in the
@@ -160,26 +160,26 @@ static int gen_vals(int test_vals[], int min, int max, int test_range, int arg)
 
 	for (i = 0; i < test_range; i++) {
 	    /* Denorms around zero */
-	    test_vals[test_count++] = i; 
+	    test_vals[test_count++] = i;
 	    test_vals[test_count++] = sign | i;
-	    
+
 	    /* Region around norm to denorm transition */
 	    test_vals[test_count++] = smallest_norm + i;
 	    test_vals[test_count++] = smallest_norm - i;
 	    test_vals[test_count++] = sign | (smallest_norm + i);
 	    test_vals[test_count++] = sign | (smallest_norm - i);
-	    
+
 	    /* Region around one */
 	    test_vals[test_count++] = one + i;
 	    test_vals[test_count++] = one - i;
 	    test_vals[test_count++] = sign | (one + i);
 	    test_vals[test_count++] = sign | (one - i);
-	    
+
 	    /* Region below largest norm */
-	    test_vals[test_count++] = largest_norm - i; 
-	    test_vals[test_count++] = sign | (largest_norm - i); 
+	    test_vals[test_count++] = largest_norm - i;
+	    test_vals[test_count++] = sign | (largest_norm - i);
 	}
-	
+
 	/* special vals */
 	test_vals[test_count++] = inf;        /* inf */
 	test_vals[test_count++] = sign | inf; /* -inf */
@@ -222,8 +222,8 @@ static int gen_vals(int test_vals[], int min, int max, int test_range, int arg)
     return test_count;
 }
 
-/* 
- * test_0_arg - Test a function with zero arguments 
+/*
+ * test_0_arg - Test a function with zero arguments
  */
 static int test_0_arg(funct_t f, funct_t ft, char *name)
 {
@@ -237,8 +237,8 @@ static int test_0_arg(funct_t f, funct_t ft, char *name)
     return error;
 }
 
-/* 
- * test_1_arg - Test a function with one argument 
+/*
+ * test_1_arg - Test a function with one argument
  */
 static int test_1_arg(funct_t f, funct_t ft, int arg1, char *name)
 {
@@ -255,8 +255,8 @@ static int test_1_arg(funct_t f, funct_t ft, int arg1, char *name)
     return error;
 }
 
-/* 
- * test_2_arg - Test a function with two arguments 
+/*
+ * test_2_arg - Test a function with two arguments
  */
 static int test_2_arg(funct_t f, funct_t ft, int arg1, int arg2, char *name)
 {
@@ -272,10 +272,10 @@ static int test_2_arg(funct_t f, funct_t ft, int arg1, int arg2, char *name)
     return error;
 }
 
-/* 
- * test_3_arg - Test a function with three arguments 
+/*
+ * test_3_arg - Test a function with three arguments
  */
-static int test_3_arg(funct_t f, funct_t ft, 
+static int test_3_arg(funct_t f, funct_t ft,
 		      int arg1, int arg2, int arg3, char *name)
 {
     funct3_t f3 = (funct3_t) f;
@@ -290,20 +290,20 @@ static int test_3_arg(funct_t f, funct_t ft,
     return error;
 }
 
-/* 
- * test_function - Test a function.  Return number of errors 
+/*
+ * test_function - Test a function.  Return number of errors
  */
 static int test_function(test_ptr t) {
     int test_counts[3];    /* number of test values for each arg */
     int args = t->args;    /* number of function arguments */
     int arg_test_range[3]; /* test range for each argument */
-    int i, a1, a2, a3;        
+    int i, a1, a2, a3;
     int errors = 0;
 
     /* These are the test values for each arg. Declared with the
        static attribute so that the array will be allocated in bss
        rather than the stack */
-    static int arg_test_vals[3][MAX_TEST_VALS]; 
+    static int arg_test_vals[3][MAX_TEST_VALS];
 
     /* Sanity check on the number of args */
     if (args < 0 || args > 3) {
@@ -329,17 +329,17 @@ static int test_function(test_ptr t) {
     /* Sanity check on the ranges */
     if (arg_test_range[0] < 1)
 	arg_test_range[0] = 1;
-    if (arg_test_range[1] < 1) 
+    if (arg_test_range[1] < 1)
 	arg_test_range[1] = 1;
-    if (arg_test_range[2] < 1) 
+    if (arg_test_range[2] < 1)
 	arg_test_range[2] = 1;
 
     /* Create a test set for each argument */
     for (i = 0; i < args; i++) {
-	test_counts[i] =  gen_vals(arg_test_vals[i], 
+	test_counts[i] =  gen_vals(arg_test_vals[i],
 				   t->arg_ranges[i][0], /* min */
 				   t->arg_ranges[i][1], /* max */
-				   arg_test_range[i],   
+				   arg_test_range[i],
 				   i);
 
     }
@@ -362,17 +362,17 @@ static int test_function(test_ptr t) {
     if (args == 0) {
 	errors += test_0_arg(t->solution_funct, t->test_funct, t->name);
 	return errors;
-    } 
+    }
 
-    /* 
-     * Test function has at least one argument 
+    /*
+     * Test function has at least one argument
      */
-      
+
     /* Iterate over the values for first argument */
 
     for (a1 = 0; a1 < test_counts[0]; a1++) {
 	if (args == 1) {
-	    errors += test_1_arg(t->solution_funct, 
+	    errors += test_1_arg(t->solution_funct,
 				 t->test_funct,
 				 arg_test_vals[0][a1],
 				 t->name);
@@ -380,31 +380,31 @@ static int test_function(test_ptr t) {
 	    /* Stop testing if there is an error */
 	    if (errors)
 		return errors;
-	} 
+	}
 	else {
 	    /* if necessary, iterate over values for second argument */
 	    for (a2 = 0; a2 < test_counts[1]; a2++) {
 		if (args == 2) {
-		    errors += test_2_arg(t->solution_funct, 
+		    errors += test_2_arg(t->solution_funct,
 					 t->test_funct,
-					 arg_test_vals[0][a1], 
+					 arg_test_vals[0][a1],
 					 arg_test_vals[1][a2],
 					 t->name);
 
 		    /* Stop testing if there is an error */
 		    if (errors)
 			return errors;
-		} 
+		}
 		else {
 		    /* if necessary, iterate over vals for third arg */
 		    for (a3 = 0; a3 < test_counts[2]; a3++) {
-			errors += test_3_arg(t->solution_funct, 
+			errors += test_3_arg(t->solution_funct,
 					     t->test_funct,
-					     arg_test_vals[0][a1], 
+					     arg_test_vals[0][a1],
 					     arg_test_vals[1][a2],
 					     arg_test_vals[2][a3],
 					     t->name);
-			
+
 			/* Stop testing if there is an error */
 			if (errors)
 			    return errors;
@@ -414,14 +414,14 @@ static int test_function(test_ptr t) {
 	}
     } /* a1 */
 
-    
+
     return errors;
 }
 
-/* 
- * run_tests - Run series of tests.  Return number of errors 
- */ 
-static int run_tests() 
+/*
+ * run_tests - Run series of tests.  Return number of errors
+ */
+static int run_tests()
 {
     int i;
     int errors = 0;
@@ -444,7 +444,7 @@ static int run_tests()
 	    max_points += rating;
 
 	    if (grade || terrors < 1)
-		printf(" %.0f\t%d\t%d\t%s\n", 
+		printf(" %.0f\t%d\t%d\t%s\n",
 		       tpoints, rating, terrors, test_set[i].name);
 
 	}
@@ -454,8 +454,8 @@ static int run_tests()
     return errors;
 }
 
-/* 
- * get_num_val - Extract hex/decimal/or float value from string 
+/*
+ * get_num_val - Extract hex/decimal/or float value from string
  */
 static int get_num_val(char *sval, unsigned *valp) {
     char *endp;
@@ -502,7 +502,7 @@ static int get_num_val(char *sval, unsigned *valp) {
 }
 
 
-/* 
+/*
  * usage - Display usage info
  */
 static void usage(char *cmd) {
@@ -519,8 +519,8 @@ static void usage(char *cmd) {
 }
 
 
-/************** 
- * Main routine 
+/**************
+ * Main routine
  **************/
 
 int main(int argc, char *argv[])

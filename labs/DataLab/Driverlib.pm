@@ -1,6 +1,6 @@
 ###############################################################
 # Driverlib.pm - A package of helper functions for Perl drivers
-# 
+#
 # Copyright (c) 2005 David R. O'Hallaron, All rights reserved.
 ###############################################################
 
@@ -25,7 +25,7 @@ use strict;
 #
 
 #
-# driver_post - This is the routine that a driver calls when 
+# driver_post - This is the routine that a driver calls when
 #    it needs to transmit an autoresult string to the result server.
 #
 sub driver_post ($$) {
@@ -39,18 +39,18 @@ sub driver_post ($$) {
         print "\n";
         print "AUTORESULT_STRING=$result\n";
         return;
-    }	
+    }
 
     # If the driver was called with a specific userid, then submit
     # the autoresult string to the result server over the Internet.
     if ($userid) {
-        my $status = submitr($Driverhdrs::SERVER_NAME, 
-                             $Driverhdrs::SERVER_PORT, 
-                             $Driverhdrs::COURSE_NAME, 
-                             $userid, 
-                             $Driverhdrs::LAB, 
+        my $status = submitr($Driverhdrs::SERVER_NAME,
+                             $Driverhdrs::SERVER_PORT,
+                             $Driverhdrs::COURSE_NAME,
+                             $userid,
+                             $Driverhdrs::LAB,
                              $result);
-        
+
         # Print the status of the transfer
         if (!($status =~ /OK/)) {
             print "$status\n";
@@ -58,7 +58,7 @@ sub driver_post ($$) {
             exit(1);
         }
         print "Success: Sent autoresult string for $userid to the result server.\n";
-    }	
+    }
 }
 
 
@@ -120,7 +120,7 @@ sub submitr ($$$$$$) {
 
     close SERVER;
     return $line;
-    
+
 }
 
 #
