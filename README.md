@@ -9,5 +9,5 @@
 
 ## Implementation
 
-* lab01: [Datalab](./labs/Datalab)<br/>36/36
+* lab01: [DataLab](./labs/DataLab)<br/>36/36
 
