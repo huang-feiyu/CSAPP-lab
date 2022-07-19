@@ -87,3 +87,46 @@ According to `cmpl` instruction, the first number <= 15.
 Then, jump to `func4`. (After `func4`, `%eax` must equals to 0) In my case, I test 0, it is correct in `func4`.
 
 The 2nd number is easy to find, it is 0.
+
+### phase_5
+
+`%fs:0x28` is a random value to protect stack.
+
+According to `string_length()`, we know our string is 6 chars. Skip the addresss calculation,
+we move to `strings_not_equal` to get the reference string. My test answer is "answer",
+I got "ayused" after processing the string. The reference strin is "flyers".
+
+So, we have to step into the process.
+
+```assembly
+### at start: rax=0, rbx=0x6038c0, rsp=$my_string
+40108b:	0f b6 0c 03          	movzbl (%rbx,%rax,1),%ecx # ecx <- (rbx + rax)[i]
+40108f:	88 0c 24             	mov    %cl,(%rsp) # rsp[i] <- ecx
+401092:	48 8b 14 24          	mov    (%rsp),%rdx # rdx <- rsp[i]
+401096:	83 e2 0f             	and    $0xf,%edx # edx <- rdx & 0xf, get the low 4 bits of rsp[i]
+401099:	0f b6 92 b0 24 40 00 	movzbl 0x4024b0(%rdx),%edx # edx <- (0x4024b0 + rdx)[0]
+4010a0:	88 54 04 10          	mov    %dl,0x10(%rsp,%rax,1) # rsp[16 + i] <- edx
+4010a4:	48 83 c0 01          	add    $0x1,%rax # rax <- rax + 0x1
+4010a8:	48 83 f8 06          	cmp    $0x6,%rax
+4010ac:	75 dd                	jne    40108b <phase_5+0x29> # if rax != 0x6, goto 40108b
+```
+
+We got `0x4024b0` "maduiersnfotvbylSo you think you can stop the bomb with ctrl-c, do you?"
+We need to get the reference string "flyers" from the string. The low 4 bits of our string as index.
+
+```
+9 :
+	)9IYiy
+15 :
+/?O_o
+14 :
+.>N^n~
+5 :
+%5EUeu
+6 :
+&6FVfv
+7 :
+'7GWgw
+```
+
+I choose ")_^%&7" as the answer.
