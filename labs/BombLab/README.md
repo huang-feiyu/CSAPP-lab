@@ -108,3 +108,54 @@ explode: explode_bomb();
 ```
 
 **Answer 2**: 1 2 4 8 16 32
+
+### phase_3
+
+```assembly
+phase_3:
+sub    $0x18,%rsp
+lea    0xc(%rsp),%rcx
+lea    0x8(%rsp),%rdx
+mov    $0x4025cf,%esi
+mov    $0x0,%eax
+call   400bf0 <__isoc99_sscanf@plt>
+cmp    $0x1,%eax
+jg     400f6a <phase_3+0x27>
+call   40143a <explode_bomb>
+cmpl   $0x7,0x8(%rsp)
+ja     400fad <phase_3+0x6a>
+mov    0x8(%rsp),%eax
+jmp    *0x402470(,%rax,8)
+mov    $0xcf,%eax
+jmp    400fbe <phase_3+0x7b>
+mov    $0x2c3,%eax
+jmp    400fbe <phase_3+0x7b>
+mov    $0x100,%eax
+jmp    400fbe <phase_3+0x7b>
+mov    $0x185,%eax
+jmp    400fbe <phase_3+0x7b>
+mov    $0xce,%eax
+jmp    400fbe <phase_3+0x7b>
+mov    $0x2aa,%eax
+jmp    400fbe <phase_3+0x7b>
+mov    $0x147,%eax
+jmp    400fbe <phase_3+0x7b>
+call   40143a <explode_bomb>
+mov    $0x0,%eax
+jmp    400fbe <phase_3+0x7b>
+mov    $0x137,%eax
+cmp    0xc(%rsp),%eax
+je     400fc9 <phase_3+0x86>
+call   40143a <explode_bomb>
+add    $0x18,%rsp
+ret
+```
+
+Use `scanf()` read from line 2, return the number of inputs (stored in `%eax`).
+Test with a lot of numbers to see how many it can read. => 2
+
+According to the next `compl` instruction, we know that our numbers are stored in `%rsp+0x8` & `%rsp+0xc`.
+Also, we know the first number must be less than 7.
+
+Then, jump to a specific address according to the number `*0x402470(,%rax,8)`.
+Aka. 0x402470 + (number * 8). For me(number=5), it is `0x402498` => `0x400f98` => `0xce` => 206
