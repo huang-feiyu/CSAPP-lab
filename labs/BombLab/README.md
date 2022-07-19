@@ -78,3 +78,12 @@ Also, we know the first number must be less than 7.
 
 Then, jump to a specific address according to the number `*0x402470(,%rax,8)`.
 Aka. 0x402470 + (number * 8). For me(number=5), it is `0x402498` => `0x400f98` => `0xce` => 206
+
+### phase_4
+
+According to `scanf()`, the number of inputs is 2.
+According to `cmpl` instruction, the first number <= 15.
+
+Then, jump to `func4`. (After `func4`, `%eax` must equals to 0) In my case, I test 0, it is correct in `func4`.
+
+The 2nd number is easy to find, it is 0.
