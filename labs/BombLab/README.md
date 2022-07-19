@@ -45,3 +45,66 @@ and use gdb to find the address of the reference string. Echo the address to the
 ```
 
 **Answer 1**: Border relations with Canada have never been better.
+
+### phase_2
+
+```assembly
+phase_2
+push   %rbp
+push   %rbx
+sub    $0x28,%rsp
+mov    %rsp,%rsi
+call   40145c <read_six_numbers>
+cmpl   $0x1,(%rsp)
+je     400f30 <phase_2+0x34>
+call   40143a <explode_bomb>
+jmp    400f30 <phase_2+0x34>
+mov    -0x4(%rbx),%eax
+add    %eax,%eax
+cmp    %eax,(%rbx)
+je     400f25 <phase_2+0x29>
+call   40143a <explode_bomb>
+add    $0x4,%rbx
+cmp    %rbp,%rbx
+jne    400f17 <phase_2+0x1b>
+jmp    400f3c <phase_2+0x40>
+lea    0x4(%rsp),%rbx
+lea    0x18(%rsp),%rbp
+jmp    400f17 <phase_2+0x1b>
+add    $0x28,%rsp
+pop    %rbx
+pop    %rbp
+ret
+```
+
+Read the six numbers from the 2nd line, and store them in `%rsp` as an array.
+Write C code, according to the assembly code.
+
+```c
+void phase_2() {
+    int my_rsp, my_rbx, my_eax, my_rbp;
+    if (my_rsp[0] == 1) {
+        my_rbx = &my_rsp[1];
+        my_rbp = &my_rsp[5];
+    } else
+        goto explode;
+
+    while (my_eax != *my_rbx) {
+        my_eax = *my_rbx + *my_rbx;
+        if (my_eax == *my_rbx) {
+            ; // nothing to do
+        } else {
+            goto explode;
+        }
+        next: my_rbx += 4;
+    }
+
+    return;
+}
+
+// code...
+
+explode: explode_bomb();
+```
+
+**Answer 2**: 1 2 4 8 16 32
