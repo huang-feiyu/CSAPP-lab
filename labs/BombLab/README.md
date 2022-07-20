@@ -210,3 +210,47 @@ We need to sort them desc and our "123456" => "3 4 5 6 1 2". Every element is su
 
 After reading others' solution, I know that: phase_5 is about heap, phase_6 is about linked-list.
 **AND**, there is a secret_phase about binary tree.
+
+### secret_phase
+
+> Binary Tree
+
+Find "secret_phase" in console, we know that there must be a "%d %d %s" to step into secret_phase.
+That is phase_4 and `0x402622` "DrEvil", just add "DrEvil" to the end of the string.
+
+The input number is stored in `%rax`/`%ebx`, it must less than `0x3e8`.
+
+Before doing this phase, I have already known that it is about binary tree. So, I can decode data in `0x6030f0`.
+Got the following img:
+
+<img src="https://miro.medium.com/max/1394/1*I3XalhhOOj80N1jC8TwSSQ.png" height="200">
+
+Then step into `func7()`, The return value must be 2.
+
+```c
+int func7(tree, num) {
+    if (tree == null)
+        return -1;
+
+    if (tree.val <= num) {
+        if (tree.val == num) {
+            return 0;
+        }
+        return 2 * func7(tree.right, num) + 1;
+    } else {
+        return 2 * func7(tree.left, num);
+    }
+}
+```
+
+```
+# I choose 22:
+
+36 -> 8 -> 22
+2  <- 1 <- 0
+```
+
+## End
+
+While doing this lab, I learned from other a lot. Sometimes, I feel very upset cause I can not figure it out.
+I have spent two days to solve this problem set, and it is worth it.
