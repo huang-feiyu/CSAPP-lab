@@ -81,6 +81,8 @@ Aka. 0x402470 + (number * 8). For me(number=5), it is `0x402498` => `0x400f98` =
 
 ### phase_4
 
+> Recursion.
+
 According to `scanf()`, the number of inputs is 2.
 According to `cmpl` instruction, the first number <= 15.
 
@@ -89,6 +91,8 @@ Then, jump to `func4`. (After `func4`, `%eax` must equals to 0) In my case, I te
 The 2nd number is easy to find, it is 0.
 
 ### phase_5
+
+> Heap.
 
 `%fs:0x28` is a random value to protect stack.
 
@@ -130,3 +134,79 @@ We need to get the reference string "flyers" from the string. The low 4 bits of 
 ```
 
 I choose ")_^%&7" as the answer.
+
+### phase_6
+
+> Linked List
+
+Use "1 2 4 8 16 32" as the test answer, after `read_six_numbers()`,
+we know that our array store in `%rbp`/`%r13`/`%rsp`/`%r14`.
+
+The next loop code block is equal to the following C code:
+
+```c
+int i = 0;
+while (i != 6) {
+    if (arr[i] - 1 > 5)
+        bomb()
+    i++;
+    for (j = i; j <= 5; j++) {
+        if (arr[j] == arr[i])
+            bomb()
+    }
+}
+```
+
+So we know that: `arr[i] <= 6` && `arr[j] != arr[i]`.
+According to `read_six_numbers()`, we need to choose 6 numbers from "0 1 2 3 4 5 6".
+
+The following code is the same as the C code:
+
+```c
+for (int i = 0; i < 6; i++){
+    arr[i] = 7 - arr[i];
+}
+```
+
+The following code is the same as the C code:
+
+```c
+for (int i = 0; i < 6; i++) {
+    int temp = arr[i];
+    int addr = 0x6032d0;
+    for (int j = 1; j < temp; j++) {
+        addr = *(addr + 8);
+    }
+    // *(rbx+2*i) = addr; aka, a new array of 8-bits element.
+    *(arr + 2 * i + 0x20) = addr; // n_arr[2*i] = addr;
+}
+```
+
+The following code is the same as the C code:
+
+```c
+// n_arr is new array of 8-bits element.
+for(int i = 1; i < 6; i++){
+    *(n_arr[i-1]+0x8) = n_arr[i];
+}
+```
+
+* `n_arr[0~5]` is `0x6032d0` ~ `0x603320`.
+* `*(n_arr[0~5]+0x8)` is `*0x6032d0` ~ `*0x603320`.
+
+The last code is the same as the C code:
+
+```c
+for (int i = 1; i < 6; i++) {
+    if (*(n_arr[i-1]) < *(n_arr[i]))
+        bomb()
+}
+```
+
+The first must be less than the second.
+
+Use gdb to get `*(n_arr[0~5]+0x8)`, it is: 0x14c, 0x0a8, 0x39c, 0x2b3, 0x1dd, 0x1bb.
+We need to sort them desc and our "123456" => "3 4 5 6 1 2". Every element is subtracted 7 => "4 3 2 1 6 5".
+
+After reading others' solution, I know that: phase_5 is about heap, phase_6 is about linked-list.
+**AND**, there is a secret_phase about binary tree.
