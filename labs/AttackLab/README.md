@@ -168,4 +168,4 @@ ff ff ff ff ff ff ff ff
 # string is an array of char, head is '5'/'\35', tail is '\61'; first address is 0x5561dca0
 ```
 
-> If we want to read the above hex, we need to read from bottom to top, from left to right.
+> If we want to read the above hex from big to small(stack increase), we need to read from bottom to top, from left to right.
