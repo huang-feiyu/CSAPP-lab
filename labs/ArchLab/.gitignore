@@ -19,6 +19,6 @@ seq*-*.c
 *.seq
 *.seq+
 core
-*.ys
+#*.ys
 *.yo
 yas-grammar.c
