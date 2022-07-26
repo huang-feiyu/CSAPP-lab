@@ -27,3 +27,11 @@ TKINC=-isystem /usr/include/tcl8.5
 > CFLAGS=-Wall -O1 -g -fcommon
 > LCFLAGS=-O1 -fcommon
 ```
+
+## Part A
+
+Work in [misc](./sim/misc/), there are y86 assembler `yas` and y86 instruction simulator `yis`.
+What we need to do is to translate [example.c](./sim/misc/examples.c)'s three functions
+to y86 assembly code.
+
+Look up to csapp figure 4.7, it is easy.

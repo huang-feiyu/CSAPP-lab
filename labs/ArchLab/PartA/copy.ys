@@ -1,0 +1,63 @@
+# NAME:    Huang
+# WEBSITE: huangblog.com
+
+# Execution begins at address 0
+	.pos 0
+	irmovq stack, %rsp # set up stack pointer
+	call main          # execute main program
+	halt               # terminate program
+
+.align 8
+# Source block
+src:
+    .quad 0x00a
+    .quad 0x0b0
+    .quad 0xc00
+## Destination block
+dest:
+    .quad 0x111
+    .quad 0x222
+    .quad 0x333
+
+main:
+    # set up argument
+	irmovq src, %rdi
+    irmovq dest, %rsi
+    irmovq $3, %rcx
+	call copy_block
+	ret
+
+# copy_block(long *src, long *dest, long len)
+# src: %rdi, dest: %rsi, len: %rcx
+copy_block:
+    pushq %r8        # len
+    pushq %r9        # constant 1
+    pushq %r10       # temporary variable
+    pushq %rdi
+    pushq %rsi
+    irmovq $0, %rax  # result
+    rrmovq %rcx, %r8
+    irmovq $1, %r9
+
+loop:
+    subq %r9, %r8 # len--
+    jl end        # if len == 0, jump to end
+    mrmovq (%rdi), %r10 # load src[0]
+    rmmovq %r10, (%rsi) # store dest[0]
+    xorq %r10, %rax     # result = result ^ src[0]
+    irmovq $8, %r10
+    addq %r10, %rdi     # src++
+    addq %r10, %rsi     # dest++
+    jmp loop
+
+end:
+    popq %rsi
+    popq %rdi
+    popq %r10
+    popq %r9
+    popq %r8
+    ret
+
+# Stack starts here and grows to lower adresses
+	.pos 0x200
+stack:

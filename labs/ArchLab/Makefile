@@ -30,8 +30,19 @@ handin-partc:
 	cp sim/pipe/ncopy.ys $(HANDINDIR-PARTC)/$(TEAM)-$(VERSION)-ncopy.ys
 	cp sim/pipe/pipe-full.hcl $(HANDINDIR-PARTC)/$(TEAM)-$(VERSION)-pipe-full.hcl
 
+# test for Part A
+parta:
+	(cd sim; make; cd ..)
+	clear && echo "" && echo "========== Part A =========="
+
+	echo "" && echo "==== sum_list ===="
+	./sim/misc/yas ./PartA/sum.ys && ./sim/misc/yis ./PartA/sum.yo
+	echo "" && echo "==== rsum_list ===="
+	./sim/misc/yas ./PartA/rsum.ys && ./sim/misc/yis ./PartA/rsum.yo
+	echo "" && echo "==== copy_block ===="
+	./sim/misc/yas ./PartA/copy.ys && ./sim/misc/yis ./PartA/copy.yo
+
 clean:
 	rm -f *~ *.o
-
-
-
+	(cd sim; make clean; cd ..)
+	clear

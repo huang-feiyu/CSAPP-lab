@@ -22,3 +22,5 @@ core
 #*.ys
 *.yo
 yas-grammar.c
+ldriver.ys
+sdriver.ys

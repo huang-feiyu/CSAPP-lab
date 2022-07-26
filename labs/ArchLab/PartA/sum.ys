@@ -1,0 +1,48 @@
+# NAME:    Huang
+# WEBSITE: huangblog.com
+
+# Execution begins at address 0
+	.pos 0
+	irmovq stack, %rsp # set up stack pointer
+	call main          # execute main program
+	halt               # terminate program
+
+# Sample linked list
+.align 8
+ele1:
+	.quad 0x00a
+	.quad ele2
+ele2:
+	.quad 0x0b0
+	.quad ele3
+ele3:
+	.quad 0xc00
+	.quad 0
+
+main:
+	irmovq ele1, %rdi # set up argument
+	call sum_list
+	ret
+
+# list_ptr {long val, list_ptr next}
+# long sum_list(list_ptr ls)
+# ls in %rdi
+sum_list:
+	pushq %r8
+	xorq %rax, %rax # sum = 0
+
+loop:
+	andq %rdi, %rdi # if ls == NULL, break; set CC
+	je end
+	mrmovq (%rdi), %r8   # r8 = ls->val
+	addq %r8, %rax       # sum += ls->val
+	mrmovq 8(%rdi), %rdi # ls = ls->next
+	jmp loop
+
+end:
+	popq %r8
+	ret
+
+# Stack starts here and grows to lower adresses
+	.pos 0x200
+stack:
