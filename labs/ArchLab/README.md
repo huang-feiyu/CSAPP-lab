@@ -35,3 +35,25 @@ What we need to do is to translate [example.c](./sim/misc/examples.c)'s three fu
 to y86 assembly code.
 
 Look up to csapp figure 4.7, it is easy.
+
+## Part B
+
+Work in [seq](./sim/seq), it is a Sequential Y86-64 Simulator.
+What we need to do is to add a new instruction `iaddr`.
+
+Loop up to csapp figure 4.18 and homework 4.51 & 4.52.
+
+* `valC`: constant V
+* `valA`: register value of `R[rB]` (rA==rB)
+* `valP`: next PC
+
+| stage | iaddq V, rB                                                             |
+| ----- | ----------------------------------------------------------------------- |
+| IF    | icode: ifun⟵M1[PC]<br/>rA: rB⟵M1[PC+1]<br/>valC⟵M8[PC+2]<br/>valP⟵PC+10 |
+| ID    | valA⟵R[rA]                                                              |
+| EXE   | valE⟵valC+valA                                                          |
+| MEM   |                                                                         |
+| WB    | R[rB]⟵valE                                                              |
+| NPC   | PC⟵valP                                                                 |
+
+Add `IIADDR` to the block according the table above, it's done.

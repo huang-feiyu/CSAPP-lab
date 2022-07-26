@@ -42,6 +42,19 @@ parta:
 	echo "" && echo "==== copy_block ===="
 	./sim/misc/yas ./PartA/copy.ys && ./sim/misc/yis ./PartA/copy.yo
 
+# test for Part B
+partb:
+	(cd sim; make)
+	(cd sim/seq; make clean; make VERSION=full)
+	clear && echo "" && echo "========== Part B =========="
+
+	echo "" && echo "==== benchmark ===="
+	(cd sim/y86-code; make testssim; cd ..)
+	echo "" && echo "==== regression ===="
+	(cd sim/ptest; make SIM=../seq/ssim; cd ..)
+	echo "" && echo "==== iaddq ===="
+	(cd sim/ptest; make SIM=../seq/ssim TFLAGS=-i; cd ..)
+
 clean:
 	rm -f *~ *.o
 	(cd sim; make clean; cd ..)
