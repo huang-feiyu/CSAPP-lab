@@ -39,7 +39,7 @@ Look up to csapp figure 4.7, it is easy.
 ## Part B
 
 Work in [seq](./sim/seq), it is a Sequential Y86-64 Simulator.
-What we need to do is to add a new instruction `iaddr`.
+What we need to do is to add a new instruction `iaddq`.
 
 Loop up to csapp figure 4.18 and homework 4.51 & 4.52.
 
@@ -56,4 +56,11 @@ Loop up to csapp figure 4.18 and homework 4.51 & 4.52.
 | WB    | R[rB]⟵valE                                                              |
 | NPC   | PC⟵valP                                                                 |
 
-Add `IIADDR` to the block according the table above, it's done.
+Add `IIADDQ` to the block according the table above, it's done.
+
+## Part C
+
+Work in [pipe](./sim/pipe/), it is a Pipelined Y86-64 Simulator.
+What we need to do is to add a new instruction `iaddq`.
+
+Skip this part, configuration costs a lot of time. It is not worth to continue.

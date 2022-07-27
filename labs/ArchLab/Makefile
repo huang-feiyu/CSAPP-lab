@@ -55,6 +55,19 @@ partb:
 	echo "" && echo "==== iaddq ===="
 	(cd sim/ptest; make SIM=../seq/ssim TFLAGS=-i; cd ..)
 
+# test for Part C
+partc:
+	(cd sim; make)
+	(cd sim/pipe; make clean; make VERSION=full)
+	clear && echo "" && echo "========== Part C =========="
+
+	echo "" && echo "==== benchmark ===="
+	(cd sim/y86-code; make testpsim; cd ..)
+	echo "" && echo "==== regression ===="
+	(cd sim/ptest; make SIM=../pipe/ssim; cd ..)
+	echo "" && echo "==== iaddq ===="
+	(cd sim/ptest; make SIM=../pipe/ssim TFLAGS=-i; cd ..)
+
 clean:
 	rm -f *~ *.o
 	(cd sim; make clean; cd ..)
