@@ -10,6 +10,8 @@
 
 ## Implementation
 
-* lab01: [DataLab](./labs/DataLab)<br/>36/36
-* lab02: [BombLab](./labs/BombLab)<br/>multiple booms
-* lab03: [AttackLab](./labs/AttackLab)<br/>95/100
+* [lab01](./labs/DataLab): DataLab (**36/36**)
+* [lab02](./labs/BombLab): BombLab (**multiple booms**)
+* [lab03](./labs/AttackLab): AttackLab (**95/100**)
+* [lab04](./labs/ArchLab/): ArchLab (**2/3**)
+
