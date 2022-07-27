@@ -13,5 +13,5 @@
 * [lab01](./labs/DataLab): DataLab (**36/36**)
 * [lab02](./labs/BombLab): BombLab (**multiple booms**)
 * [lab03](./labs/AttackLab): AttackLab (**95/100**)
-* [lab04](./labs/ArchLab/): ArchLab
+* [lab04](./labs/ArchLab/): ArchLab (**2/3**)
 
