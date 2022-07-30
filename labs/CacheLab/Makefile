@@ -11,6 +11,11 @@ all: csim test-trans tracegen
 csim: csim.c cachelab.c cachelab.h
 	$(CC) $(CFLAGS) -o csim csim.c cachelab.c -lm
 
+test-csim: csim.c cachelab.c cachelab.h
+	rm csim
+	$(CC) $(CFLAGS) -o csim csim.c cachelab.c -lm
+	clear && ./test-csim
+
 test-trans: test-trans.c trans.o cachelab.c cachelab.h
 	$(CC) $(CFLAGS) -o test-trans test-trans.c cachelab.c trans.o
 

@@ -1,3 +1,9 @@
 {
-    "C_Cpp.dimInactiveRegions": false
+    "C_Cpp.dimInactiveRegions": false,
+    "files.associations": {
+        "*.asm": "gas",
+        "*.ys": "gas",
+        "stdio.h": "c",
+        "cstdlib": "c"
+    }
 }
