@@ -1,12 +1,15 @@
 # CMU 15-213
 
-> 本课程仅做 lab 与 proj，而不作理论部分学习。
+> 本课程仅做 lab 与 exam, 没有看视频。
 
 * Website: [CSAPP](http://csapp.cs.cmu.edu/)
 * Lab: [labs](http://csapp.cs.cmu.edu/3e/labs.html)
-* Chinese: [九曲阑干·b站](https://www.bilibili.com/video/BV1cD4y1D7uR)
-* English: [Dr.Dng·b站](https://www.bilibili.com/video/BV1hf4y1P7qW)
 * Textbook: [gitbook](https://hansimov.gitbook.io/csapp/)
+* Exam: [old exams](https://www.cs.cmu.edu/~213/exams.html)
+* Resources
+     * Official: [CMU 15-213](https://www.cs.cmu.edu/~213/)
+     * Chinese: [九曲阑干·b站](https://www.bilibili.com/video/BV1cD4y1D7uR)
+     * English: [Dr.Dng·b站](https://www.bilibili.com/video/BV1hf4y1P7qW)
 
 ## Implementation
 
