@@ -15,6 +15,7 @@
 * [lab03](./labs/AttackLab): AttackLab (**95/100**)
 * [lab04](./labs/ArchLab): ArchLab (**2/3**)
 * [lab05](./labs/CacheLab): CacheLab (**55.8/60**)
-* [lab06](./labs/ShellLab): ShellLab
+* [lab06](./labs/LinkLab): LinkLab
+* [lab07](./labs/ShellLab): ShellLab
 
 
