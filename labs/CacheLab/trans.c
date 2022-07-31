@@ -1,4 +1,11 @@
 /*
+ *****************************************************************************
+ * csim.c: Cache simulator main program
+ * NAME:    Huang
+ * DATE:    07/31/2022
+ * WEBSITE: huangblog.com
+ *****************************************************************************
+ *
  * trans.c - Matrix transpose B = A^T
  *
  * Each transpose function must have a prototype of the form:
@@ -22,6 +29,93 @@ int is_transpose(int M, int N, int A[N][M], int B[M][N]);
  */
 char transpose_submit_desc[] = "Transpose submission";
 void transpose_submit(int M, int N, int A[N][M], int B[M][N]) {
+    int i, j, k, l;
+    int v0, v1, v2, v3, v4, v5, v6, v7;
+if (M == 32) {
+    for (i = 0; i < N; i += 8) {
+        for (j = 0; j < M; j += 8) {
+            for (k = 0; k < 8; k++) {
+                v0 = A[i + k][j + 0];
+                v1 = A[i + k][j + 1];
+                v2 = A[i + k][j + 2];
+                v3 = A[i + k][j + 3];
+                v4 = A[i + k][j + 4];
+                v5 = A[i + k][j + 5];
+                v6 = A[i + k][j + 6];
+                v7 = A[i + k][j + 7];
+
+                B[j + 0][i + k] = v0;
+                B[j + 1][i + k] = v1;
+                B[j + 2][i + k] = v2;
+                B[j + 3][i + k] = v3;
+                B[j + 4][i + k] = v4;
+                B[j + 5][i + k] = v5;
+                B[j + 6][i + k] = v6;
+                B[j + 7][i + k] = v7;
+            }
+        }
+    }
+} else if (M == 64) {
+    for (i = 0; i < N; i += 8) {
+        for (j = 0; j < M; j += 4) {
+            for (k = 0; k < 8; k += 2) {
+                v0 = A[i + k][j + 0];
+                v1 = A[i + k][j + 1];
+                v2 = A[i + k][j + 2];
+                v3 = A[i + k][j + 3];
+                v4 = A[i + k + 1][j + 0];
+                v5 = A[i + k + 1][j + 1];
+                v6 = A[i + k + 1][j + 2];
+                v7 = A[i + k + 1][j + 3];
+
+                B[j + 0][i + k] = v0;
+                B[j + 1][i + k] = v1;
+                B[j + 2][i + k] = v2;
+                B[j + 3][i + k] = v3;
+                B[j + 0][i + k + 1] = v4;
+                B[j + 1][i + k + 1] = v5;
+                B[j + 2][i + k + 1] = v6;
+                B[j + 3][i + k + 1] = v7;
+            }
+        }
+    }
+} else if (M == 61) {
+    for (i = 0; i < 64; i += 8) {
+        for (j = 0; j < 60; j += 4) {
+            for (k = 0; k < 8; k += 2) {
+                v0 = A[i + k][j + 0];
+                v1 = A[i + k][j + 1];
+                v2 = A[i + k][j + 2];
+                v3 = A[i + k][j + 3];
+                v4 = A[i + k + 1][j + 0];
+                v5 = A[i + k + 1][j + 1];
+                v6 = A[i + k + 1][j + 2];
+                v7 = A[i + k + 1][j + 3];
+
+                B[j + 0][i + k] = v0;
+                B[j + 1][i + k] = v1;
+                B[j + 2][i + k] = v2;
+                B[j + 3][i + k] = v3;
+                B[j + 0][i + k + 1] = v4;
+                B[j + 1][i + k + 1] = v5;
+                B[j + 2][i + k + 1] = v6;
+                B[j + 3][i + k + 1] = v7;
+            }
+        }
+    }
+    // rest rows
+    for (k = i; k < N; k++) {
+        for (l = 0; l < M; l++) {
+            B[l][k] = A[k][l];
+        }
+    }
+    // rest columns
+    for (k = 0; k < i; k++) {
+        for (l = j; l < M; l++) {
+            B[l][k] = A[k][l];
+        }
+    }
+}
 }
 
 /*
@@ -56,7 +150,7 @@ void registerFunctions() {
     registerTransFunction(transpose_submit, transpose_submit_desc);
 
     /* Register any additional transpose functions */
-    registerTransFunction(trans, trans_desc);
+    // registerTransFunction(trans, trans_desc);
 }
 
 /*

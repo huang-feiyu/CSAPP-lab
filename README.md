@@ -14,5 +14,5 @@
 * [lab02](./labs/BombLab): BombLab (**multiple booms**)
 * [lab03](./labs/AttackLab): AttackLab (**95/100**)
 * [lab04](./labs/ArchLab): ArchLab (**2/3**)
-* [lab05](./labs/CacheLab): CacheLab
+* [lab05](./labs/CacheLab): CacheLab (**55.8/60**)
 

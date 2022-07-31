@@ -17,13 +17,18 @@ test-csim: csim.c cachelab.c cachelab.h
 	clear && ./test-csim
 
 test-trans: test-trans.c trans.o cachelab.c cachelab.h
+	$(CC) $(CFLAGS) -O0 -o tracegen tracegen.c trans.o cachelab.c
 	$(CC) $(CFLAGS) -o test-trans test-trans.c cachelab.c trans.o
+	clear && ./test-trans -M 61 -N 67
 
 tracegen: tracegen.c trans.o cachelab.c
 	$(CC) $(CFLAGS) -O0 -o tracegen tracegen.c trans.o cachelab.c
 
 trans.o: trans.c
 	$(CC) $(CFLAGS) -O0 -c trans.c
+
+test: clean all
+	clear && python2 driver.py
 
 #
 # Clean the src dirctory
