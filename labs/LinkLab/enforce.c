@@ -1,3 +1,10 @@
+/******************************************************************************
+ * enforce.c: modify the in-memory copy of the ELF file to change the dest file
+ * NAME:    Huang
+ * DATE:    08/02/2022
+ * WEBSITE: huangblog.com
+ ******************************************************************************/
+
 #include <elf.h>
 #include <errno.h>
 #include <fcntl.h>
