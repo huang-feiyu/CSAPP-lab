@@ -1,0 +1,5 @@
+enforce
+call
+*.so
+*.out
+
