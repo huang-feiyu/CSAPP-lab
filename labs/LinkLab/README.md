@@ -133,3 +133,8 @@ Need to add one more type of instruction:
     1. get the name of the variable
     2. walk through `.rela.dyn`, get the symbol with the same name
     3. judge whether the symbol is `protected_` and in the `MODE_CLOSED`
+
+---
+
+The rest is very similar to the above, so I stop here. Because it costs me a lot
+of time, almost 2 days. And I am so tired now, my back sore too much.
