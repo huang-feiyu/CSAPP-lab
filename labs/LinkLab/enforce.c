@@ -159,6 +159,21 @@ void enforce_func(instruction_t ins, code_t *code_ptr, Elf64_Addr code_addr, Elf
             code_ptr += ins.length;
             code_addr += ins.length;
 
+        } else if (ins.op == MOV_ADDR_TO_REG_OP) {
+            char *variable;
+            count = rela_dyn_shdr->sh_size / sizeof(Elf64_Rela);
+            for (k = 0; k < count; k++) {
+                if (dyn_relas[k].r_offset == ins.addr) {
+                    variable = syms_strs + syms[ELF64_R_SYM(dyn_relas[k].r_info)].st_name;
+                    if (mode == MODE_CLODED && is_protected(variable)) {
+                        replace_with_crash(code_ptr, &ins);
+                    }
+                }
+            }
+
+            code_ptr += ins.length;
+            code_addr += ins.length;
+
         } else if (ins.op == RET_OP) {
             if (mode != MODE_CLODED)
                 replace_with_crash(code_ptr, &ins);

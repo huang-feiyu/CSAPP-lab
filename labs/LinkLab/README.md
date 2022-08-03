@@ -115,10 +115,21 @@ variables that start with `protected_`.
 
 We need only to know whether there is a wrong call of `close_it()` or `open_it()`.
 
-Just need to parse 3 types of instructions:
+Just need to parse 3 types of instruction:
 * `CALL_OP`: judge which function is called
-  1. get the address of the callee
-  2. walk through `.rela.plt`, get the function with the same address
-  3. get function name to judge whether it is `close_it()` or `open_it()`
+    1. get the address of the callee
+    2. walk through `.rela.plt`, get the function with the same address
+    3. get function name to judge whether it is `close_it()` or `open_it()`
 * `RET_OP`: return to caller
 * `OTHER_OP`: increase the `code_ptr` and `code_addr` by the length of the instruction
+
+### `ex1`
+
+Detecting bad references to global variables that start `protected_`, replacing
+the bad references with a crash, but still not handling functions with branches.
+
+Need to add one more type of instruction:
+* `MOV_ADDR_TO_REG_OP`: judge whether access `protected_`var in `MODE_CLOSED`
+    1. get the name of the variable
+    2. walk through `.rela.dyn`, get the symbol with the same name
+    3. judge whether the symbol is `protected_` and in the `MODE_CLOSED`
