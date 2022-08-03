@@ -89,3 +89,15 @@ What we need to do is to fill in the implementation of enforce so that it
 changes the destination file. `enforce` function will modify the in-memory
 copy of the ELF file. Through the magic of mmap, those in-memory changes
 will be reflected in the destination file.
+
+### Take small steps
+
+Start out by printing the symbol index for every function that is provided by
+the shared library.
+
+Then, print the name instead of the symbol index.
+
+Then, print the address where each function's implementation is found.
+
+According to the [Slide](https://my.eng.utah.edu/~cs4400/elf.pdf), it is fairly
+easy to do.
