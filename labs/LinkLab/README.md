@@ -83,8 +83,6 @@ and `.rela.plt` sections, at least.
 
 ## Implementation
 
-<img src="https://user-images.githubusercontent.com/70138429/182309175-ad154769-ca0d-4bfc-8c64-5a136d494fa0.png" width="500px"/>
-
 What we need to do is to fill in the implementation of enforce so that it
 changes the destination file. `enforce` function will modify the in-memory
 copy of the ELF file. Through the magic of mmap, those in-memory changes
@@ -101,3 +99,26 @@ Then, print the address where each function's implementation is found.
 
 According to the [Slide](https://my.eng.utah.edu/~cs4400/elf.pdf), it is fairly
 easy to do.
+
+---
+
+<img src="https://user-images.githubusercontent.com/70138429/182309175-ad154769-ca0d-4bfc-8c64-5a136d494fa0.png" width="500px"/>
+
+According to the image above, we should parse all local functions to judge whether
+there is a *crash*. If there is a *crash*, we should replace the instruction with
+a `crash()`.
+
+### `ex0`
+
+Handling only functions that contain no branches and that do not access global
+variables that start with `protected_`.
+
+We need only to know whether there is a wrong call of `close_it()` or `open_it()`.
+
+Just need to parse 3 types of instructions:
+* `CALL_OP`: judge which function is called
+  1. get the address of the callee
+  2. walk through `.rela.plt`, get the function with the same address
+  3. get function name to judge whether it is `close_it()` or `open_it()`
+* `RET_OP`: return to caller
+* `OTHER_OP`: increase the `code_ptr` and `code_addr` by the length of the instruction

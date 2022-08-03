@@ -16,11 +16,18 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "decode.h"
+
 /*  Given the in-memory ELF header pointer as `ehdr` and a section
     header pointer as `shdr`, returns a pointer to the memory that
     contains the in-memory content of the section */
 #define AT_SEC(ehdr, shdr) ((void *)(ehdr) + (shdr)->sh_offset)
 
+#define MODE_CLODED 0
+#define MODE_OPEN 1
+
+void enforce_func(instruction_t, code_t *, Elf64_Addr, Elf64_Ehdr *, Elf64_Sym *, int);
+int is_protected(char *);
 Elf64_Shdr *section_by_name(Elf64_Ehdr *, const char *);
 Elf64_Shdr *section_by_index(Elf64_Ehdr *, int);
 
@@ -28,12 +35,6 @@ Elf64_Shdr *section_by_index(Elf64_Ehdr *, int);
 
 /**
  * Enforce the ELF file to change the dest file
- *
- * ehdr: the in-memory ELF header pointer
- * shdrs: the in-memory section header pointer
- * strs: the in-memory section strings
- * dynsym_shdr: the in-memory dynamic symbol table section header pointer
- * syms: the in-memory symbol table, content
  */
 void enforce(Elf64_Ehdr *ehdr) {
     /*  Your work starts here --- but add helper functions that you call
@@ -93,7 +94,99 @@ void enforce(Elf64_Ehdr *ehdr) {
         printf("offset: %lx\tname: %s\n", plt_relas[i].r_offset, syms_strs + syms[ELF64_R_SYM(plt_relas[i].r_info)].st_name);
     }
 
+    //----- print info end -----
     printf("\n\n");
+
+    // parse local functions to replace *crash* with `crash()`
+    for (i = 0; i < local_funcs_idx; i++) {
+        printf("\n=====Parse local function: %s=====\n", syms_strs + local_funcs[i]->st_name);
+
+        int j = local_funcs[i]->st_shndx;  // section index
+        instruction_t ins = {0, 0, 0};     // op, length, addr
+        code_t *code_ptr = AT_SEC(ehdr, shdrs + j) + (local_funcs[i]->st_value - shdrs[j].sh_addr);
+        Elf64_Addr code_addr = local_funcs[i]->st_value;
+
+        enforce_func(ins, code_ptr, code_addr, ehdr, local_funcs[i], MODE_CLODED);
+    }
+
+    printf("\n\n");
+}
+
+/**
+ * Enforce each crash to `crash()`
+ */
+void enforce_func(instruction_t ins, code_t *code_ptr, Elf64_Addr code_addr, Elf64_Ehdr *ehdr,
+                  Elf64_Sym *func, int mode) {
+    char *syms_strs = AT_SEC(ehdr, section_by_name(ehdr, ".dynstr"));
+    Elf64_Shdr *rela_dyn_shdr = section_by_name(ehdr, ".rela.dyn");
+    Elf64_Rela *dyn_relas = AT_SEC(ehdr, rela_dyn_shdr);
+    Elf64_Shdr *dynsym_shdr = section_by_name(ehdr, ".dynsym");
+    Elf64_Sym *syms = AT_SEC(ehdr, dynsym_shdr);
+    Elf64_Shdr *rela_plt_shdr = section_by_name(ehdr, ".rela.plt");
+    Elf64_Rela *plt_relas = AT_SEC(ehdr, rela_plt_shdr);
+    int k, count, offset;
+
+    int i = 0;  // bytes
+    for (i = 0; i < func->st_size; i += ins.length) {
+        // get the instruction
+        decode(&ins, code_ptr, code_addr);
+
+        if (ins.op == CALL_OP) {
+            instruction_t called_ins = {0, 0, 0};
+            Elf64_Addr called_addr = ins.addr;
+            offset = called_addr - code_addr;
+            code_t *called_ptr = code_ptr + offset;
+
+            decode(&called_ins, called_ptr, called_addr);
+
+            count = rela_plt_shdr->sh_size / sizeof(Elf64_Rela);
+            for (k = 0; k < count; k++) {
+                if (plt_relas[k].r_offset == called_ins.addr) {
+                    // print outer function name
+                    printf("%s\n", syms_strs + syms[ELF64_R_SYM(plt_relas[k].r_info)].st_name);
+
+                    // closed: 0; open: 1; crash: 2;
+                    if (strcmp(syms_strs + syms[ELF64_R_SYM(plt_relas[k].r_info)].st_name, "open_it") == 0)
+                        mode++;
+                    else if (strcmp(syms_strs + syms[ELF64_R_SYM(plt_relas[k].r_info)].st_name, "close_it") == 0)
+                        mode--;
+
+                    if (!(mode == MODE_CLODED || mode == MODE_OPEN))
+                        replace_with_crash(code_ptr, &ins);
+                }
+            }
+
+            code_ptr += ins.length;
+            code_addr += ins.length;
+
+        } else if (ins.op == RET_OP) {
+            if (mode != MODE_CLODED)
+                replace_with_crash(code_ptr, &ins);
+            return;
+
+        } else if (ins.op == OTHER_OP) {
+            code_ptr += ins.length;
+            code_addr += ins.length;
+        }
+    }
+}
+
+/**
+ * Judge if the variable is protected
+ */
+int is_protected(char *v) {
+    int len = strlen(v);
+    char *sub = malloc(11 * sizeof(char));
+
+    if (len < 10)
+        return 0;
+    else {
+        for (int i = 0; i < 10; i++)
+            sub[i] = v[i];
+        if (strcmp(sub, "protected_") == 0)
+            return 1;
+    }
+    return 0;
 }
 
 /**
