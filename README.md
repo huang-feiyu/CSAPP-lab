@@ -1,6 +1,6 @@
 # CMU 15-213
 
-> 本课程仅做 lab 与 exam, 没有看视频。
+> This repository contains lab implementation and some exam solutions.
 
 * Website: [CSAPP](http://csapp.cs.cmu.edu/)
 * Lab: [labs](http://csapp.cs.cmu.edu/3e/labs.html)
