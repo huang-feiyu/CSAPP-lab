@@ -54,11 +54,19 @@ functions we will implement:
 
 ## trace01
 
-It is a EOF test, which is handled by `main()`. Make sure the following 2 commands'
-outputs are the same.
+> Properly terminate on EOF.
+
+It is a EOF test, which has been handled by `main()`. Make sure the following 2
+commands' outputs are the same.
 
 ```bash
 make test01
 
 make rtest01
 ```
+
+## trace02
+
+> Process builtin quit command.
+
+Take a look at CSAPP textbook 8.4.6. It's easy to implement.

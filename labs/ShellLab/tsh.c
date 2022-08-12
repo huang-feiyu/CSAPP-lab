@@ -89,6 +89,16 @@ void app_error(char *msg);
 typedef void handler_t(int);
 handler_t *Signal(int signum, handler_t *handler);
 
+/* Error wrapper functions */
+pid_t Fork(void);
+void Sigprocmask(int how, const sigset_t *set, sigset_t *oldset);
+void Sigemptyset(sigset_t *set);
+void Sigfillset(sigset_t *set);
+void Sigaddset(sigset_t *set, int signum);
+void Execve(const char *filename, char *const argv[], char *const envp[]);
+void Setpgid(pid_t pid, pid_t pgid);
+void Kill(pid_t pid, int sig);
+
 /*
  * main - The shell's main routine
  */
@@ -166,8 +176,32 @@ int main(int argc, char **argv) {
  * when we type ctrl-c (ctrl-z) at the keyboard.
  */
 void eval(char *cmdline) {
-    // TODO:
-    return;
+    char *argv[MAXARGS]; /* argument list execve() */
+    char buf[MAXLINE];   /* holds modified command line */
+    int bg;              /* should the job run in bg or fg? */
+    pid_t pid;           /* process id */
+
+    strcpy(buf, cmdline);
+    bg = parseline(buf, argv);
+    if (argv[0] == NULL)
+        return; /* ignore empty lines */
+
+    if (!builtin_cmd(argv)) {
+        if ((pid = Fork()) == 0) { /* child runs user job */
+            if (execve(argv[0], argv, environ) < 0) {
+                printf("%s: Command not found.\n", argv[0]);
+                exit(0);
+            }
+        }
+
+        /* Parent waits for foreground job to terminate */
+        if (!bg) {
+            int status;
+            if (waitpid(pid, &status, 0) < 0)
+                unix_error("waitfg: waitpid error");
+        } else
+            printf("%d %s", pid, cmdline);
+    }
 }
 
 /*
@@ -229,7 +263,11 @@ int parseline(const char *cmdline, char **argv) {
  *    it immediately.
  */
 int builtin_cmd(char **argv) {
-    // TODO:
+    if (!strcmp(argv[0], "quit"))
+        exit(0);
+    if (!strcmp(argv[0], "&")) /* ignore singleton & */
+        return 1;
+
     return 0; /* not a builtin command */
 }
 
@@ -490,4 +528,49 @@ handler_t *Signal(int signum, handler_t *handler) {
 void sigquit_handler(int sig) {
     printf("Terminating after receipt of SIGQUIT signal\n");
     exit(1);
+}
+
+pid_t Fork(void) {
+    pid_t pid;
+    if ((pid = fork()) < 0)
+        unix_error("Fork error");
+    return pid;
+}
+
+void Sigprocmask(int how, const sigset_t *set, sigset_t *oldset) {
+    if (sigprocmask(how, set, oldset) < 0)
+        unix_error("Sigprocmask error");
+}
+
+void Sigemptyset(sigset_t *set) {
+    if (sigemptyset(set) < 0)
+        unix_error("Sigprocmask error");
+}
+
+void Sigfillset(sigset_t *set) {
+    if (sigfillset(set) < 0)
+        unix_error("Sigfillset error");
+}
+
+void Sigaddset(sigset_t *set, int signum) {
+    if (sigaddset(set, signum) < 0)
+        unix_error("Sigaddset error");
+}
+
+void Execve(const char *filename, char *const argv[], char *const envp[]) {
+    if (execve(filename, argv, envp) < 0) {
+        printf("%s: Command not found.\n", argv[0]);
+    }
+}
+
+void Setpgid(pid_t pid, pid_t pgid) {
+    if (setpgid(pid, pgid) < 0) {
+        unix_error("Setpid error");
+    }
+}
+
+void Kill(pid_t pid, int sig) {
+    if (kill(pid, sig) < 0) {
+        unix_error("Kill error");
+    }
 }
