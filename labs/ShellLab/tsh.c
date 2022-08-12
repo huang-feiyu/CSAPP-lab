@@ -2,9 +2,9 @@
  * tsh - A tiny shell program with job control
  *
  *****************************************************************************
- * csim.c: Cache simulator main program
+ * tsh.c:   Tiny Shell main program
  * NAME:    Huang
- * DATE:    07/30/2022
+ * DATE:    08/09/2022
  * WEBSITE: huangblog.com
  *****************************************************************************/
 
@@ -166,6 +166,7 @@ int main(int argc, char **argv) {
  * when we type ctrl-c (ctrl-z) at the keyboard.
  */
 void eval(char *cmdline) {
+    // TODO:
     return;
 }
 
@@ -228,6 +229,7 @@ int parseline(const char *cmdline, char **argv) {
  *    it immediately.
  */
 int builtin_cmd(char **argv) {
+    // TODO:
     return 0; /* not a builtin command */
 }
 
@@ -235,6 +237,7 @@ int builtin_cmd(char **argv) {
  * do_bgfg - Execute the builtin bg and fg commands
  */
 void do_bgfg(char **argv) {
+    // TODO:
     return;
 }
 
@@ -242,6 +245,7 @@ void do_bgfg(char **argv) {
  * waitfg - Block until process pid is no longer the foreground process
  */
 void waitfg(pid_t pid) {
+    // TODO:
     return;
 }
 
@@ -257,6 +261,7 @@ void waitfg(pid_t pid) {
  *     currently running children to terminate.
  */
 void sigchld_handler(int sig) {
+    // TODO:
     return;
 }
 
@@ -266,6 +271,7 @@ void sigchld_handler(int sig) {
  *    to the foreground job.
  */
 void sigint_handler(int sig) {
+    // TODO:
     return;
 }
 
@@ -275,6 +281,7 @@ void sigint_handler(int sig) {
  *     foreground job by sending it a SIGTSTP.
  */
 void sigtstp_handler(int sig) {
+    // TODO:
     return;
 }
 
