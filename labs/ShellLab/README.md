@@ -3,6 +3,9 @@
 This is the students' first introduction to application level concurrency, and
 gives them a clear idea of Unix process control, signals, and signal handling.
 
+**Need to take [Lecture 15](https://www.bilibili.com/video/BV1iW411d7hd?p=15)
+before starting this lab.**
+
 ## Prepare
 
 [WriteUp](http://csapp.cs.cmu.edu/3e/shlab.pdf)
@@ -70,3 +73,10 @@ make rtest01
 > Process builtin quit command.
 
 Take a look at CSAPP textbook 8.4.6. It's easy to implement.
+
+## trace03 & trace04
+
+> Run a foreground/background job.
+
+The two traces need not to **really** implement the `fg` and `bg` built-in commands.
+We just need to fork a child process and run the executable file via `execve()`.

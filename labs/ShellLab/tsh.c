@@ -186,12 +186,9 @@ void eval(char *cmdline) {
     if (argv[0] == NULL)
         return; /* ignore empty lines */
 
-    if (!builtin_cmd(argv)) {
+    if (!builtin_cmd(argv)) {      /* no need to fork if builtin command */
         if ((pid = Fork()) == 0) { /* child runs user job */
-            if (execve(argv[0], argv, environ) < 0) {
-                printf("%s: Command not found.\n", argv[0]);
-                exit(0);
-            }
+            Execve(argv[0], argv, environ);
         }
 
         /* Parent waits for foreground job to terminate */
@@ -267,6 +264,10 @@ int builtin_cmd(char **argv) {
         exit(0);
     if (!strcmp(argv[0], "&")) /* ignore singleton & */
         return 1;
+    if (!strcmp(argv[0], "bg") || !strcmp(argv[0], "fg")) {
+        do_bgfg(argv);
+        return 1;
+    }
 
     return 0; /* not a builtin command */
 }
