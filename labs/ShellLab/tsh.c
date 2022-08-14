@@ -2,9 +2,9 @@
  * tsh - A tiny shell program with job control
  *
  *****************************************************************************
- * csim.c: Cache simulator main program
+ * tsh.c:   Tiny Shell main program
  * NAME:    Huang
- * DATE:    07/30/2022
+ * DATE:    08/09/2022
  * WEBSITE: huangblog.com
  *****************************************************************************/
 
@@ -89,6 +89,18 @@ void app_error(char *msg);
 typedef void handler_t(int);
 handler_t *Signal(int signum, handler_t *handler);
 
+int is_digit_str(const char *str);
+
+/* Error wrapper functions */
+pid_t Fork(void);
+void Sigprocmask(int how, const sigset_t *set, sigset_t *oldset);
+void Sigemptyset(sigset_t *set);
+void Sigfillset(sigset_t *set);
+void Sigaddset(sigset_t *set, int signum);
+void Execve(const char *filename, char *const argv[], char *const envp[]);
+void Setpgid(pid_t pid, pid_t pgid);
+void Kill(pid_t pid, int sig);
+
 /*
  * main - The shell's main routine
  */
@@ -166,7 +178,40 @@ int main(int argc, char **argv) {
  * when we type ctrl-c (ctrl-z) at the keyboard.
  */
 void eval(char *cmdline) {
-    return;
+    char *argv[MAXARGS]; /* argument list execve() */
+    char buf[MAXLINE];   /* holds modified command line */
+    int bg;              /* should the job run in bg or fg? */
+    pid_t pid;           /* process id */
+
+    sigset_t mask_all, mask_one, prev_one; /* bit vector */
+
+    Sigfillset(&mask_all);
+    Sigemptyset(&mask_one);
+    Sigaddset(&mask_one, SIGCHLD);
+
+    strcpy(buf, cmdline);
+    bg = parseline(buf, argv);
+    if (argv[0] == NULL)
+        return; /* ignore empty lines */
+
+    if (!builtin_cmd(argv)) {                          /* no need to fork if builtin command */
+        Sigprocmask(SIG_BLOCK, &mask_one, &prev_one);  /* block SIGCHLD in both parent and child */
+        if ((pid = Fork()) == 0) {                     /* child process runs user job */
+            Sigprocmask(SIG_SETMASK, &prev_one, NULL); /* unblock SIGCHLD in child */
+            setpgid(0, 0);                             /* puts the child in a new process group, GID = PID */
+            Execve(argv[0], argv, environ);
+        }
+
+        Sigprocmask(SIG_BLOCK, &mask_all, NULL);   /* parent process: block all to add job */
+        addjob(jobs, pid, bg ? BG : FG, cmdline);  /* add the child to the job list */
+        Sigprocmask(SIG_SETMASK, &prev_one, NULL); /* unblock SIGCHLD in parent */
+
+        /* parent waits for foreground job to terminate */
+        if (!bg)
+            waitfg(pid);
+        else
+            printf("[%d] (%d) %s", pid2jid(pid), pid, cmdline);
+    }
 }
 
 /*
@@ -228,6 +273,19 @@ int parseline(const char *cmdline, char **argv) {
  *    it immediately.
  */
 int builtin_cmd(char **argv) {
+    if (!strcmp(argv[0], "quit"))
+        exit(0);
+    if (!strcmp(argv[0], "&")) /* ignore singleton & */
+        return 1;
+    if (!strcmp(argv[0], "bg") || !strcmp(argv[0], "fg")) {
+        do_bgfg(argv);
+        return 1;
+    }
+    if (!strcmp(argv[0], "jobs")) {
+        listjobs(jobs);
+        return 1;
+    }
+
     return 0; /* not a builtin command */
 }
 
@@ -235,14 +293,72 @@ int builtin_cmd(char **argv) {
  * do_bgfg - Execute the builtin bg and fg commands
  */
 void do_bgfg(char **argv) {
-    return;
+    /* 1. get <job> according to argument & validate job */
+    struct job_t *job;
+    char *arg_job = argv[1];
+
+    /* validate job: whether there is an argument */
+    if (arg_job == NULL) {
+        printf("%s command requires PID or %%jobid argument\n", argv[0]);
+        return;
+    }
+
+    if (arg_job[0] == '%') { /* get by %jid */
+        arg_job++;
+        if (!is_digit_str(arg_job)) {
+            printf("%s: argument must be a PID or %%jobid\n", argv[0]);
+            return;
+        }
+
+        int jid = atoi(arg_job); /* skip '%' characther */
+        job = getjobjid(jobs, jid);
+        if (job == NULL) {
+            printf("%s: No such job\n", --arg_job);
+            return;
+        }
+    } else { /* get by pid */
+        if (!is_digit_str(arg_job)) {
+            printf("%s: argument must be a PID or %%jobid\n", argv[0]);
+            return;
+        }
+
+        pid_t pid = atoi(arg_job);
+        job = getjobpid(jobs, pid);
+        if (job == NULL) {
+            printf("(%s): No such job\n", arg_job);
+            return;
+        }
+    }
+
+    /* 2. send `SIGCONT` if valid */
+    Kill(-job->pid, SIGCONT);
+
+    /* 3. do stuff according to bg or fg */
+    if (!strcmp(argv[0], "bg")) {
+        job->state = BG;
+        printf("[%d] (%d) %s", job->jid, job->pid, job->cmdline);
+    } else {
+        job->state = FG;
+        waitfg(job->pid);
+    }
+}
+
+int is_digit_str(const char *str) {
+    int len = strlen(str);
+    for (int i = 0; i < len; i++) {
+        if (!isdigit(str[i]))
+            return 0;
+    }
+    return 1;
 }
 
 /*
  * waitfg - Block until process pid is no longer the foreground process
  */
 void waitfg(pid_t pid) {
-    return;
+    /* NOTE: from hint, but CSAPP 8.5.7 is against to this */
+    while (pid == fgpid(jobs))
+        sleep(0);
 }
 
 /*****************
@@ -257,7 +373,23 @@ void waitfg(pid_t pid) {
  *     currently running children to terminate.
  */
 void sigchld_handler(int sig) {
-    return;
+    pid_t pid;
+    int status;
+
+    /* reap all child process; option means: return immediately */
+    while ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0) {
+        if (WIFEXITED(status)) { /* process terminated normally */
+            deletejob(jobs, pid);
+        }
+        if (WIFSIGNALED(status)) { /* process terminated by signal */
+            printf("Job [%d] (%d) terminated by signal %d\n", pid2jid(pid), pid, WTERMSIG(status));
+            deletejob(jobs, pid);
+        }
+        if (WIFSTOPPED(status)) { /* process stopped by signal */
+            printf("Job [%d] (%d) stopped by signal %d\n", pid2jid(pid), pid, WSTOPSIG(status));
+            getjobpid(jobs, pid)->state = ST; /* update job state to STOPPED */
+        }
+    }
 }
 
 /*
@@ -266,7 +398,12 @@ void sigchld_handler(int sig) {
  *    to the foreground job.
  */
 void sigint_handler(int sig) {
-    return;
+    pid_t pid = fgpid(jobs);
+
+    /* do nothing if no fg job */
+    if (pid != 0)
+        /* send SIGINT to foreground proces group */
+        Kill(-pid, SIGINT);
 }
 
 /*
@@ -275,7 +412,12 @@ void sigint_handler(int sig) {
  *     foreground job by sending it a SIGTSTP.
  */
 void sigtstp_handler(int sig) {
-    return;
+    pid_t pid = fgpid(jobs);
+
+    /* do nothing if no fg job */
+    if (pid != 0)
+        /* send SIGTSTP to foreground proces group */
+        Kill(-pid, SIGTSTP);
 }
 
 /*********************
@@ -483,4 +625,50 @@ handler_t *Signal(int signum, handler_t *handler) {
 void sigquit_handler(int sig) {
     printf("Terminating after receipt of SIGQUIT signal\n");
     exit(1);
+}
+
+pid_t Fork(void) {
+    pid_t pid;
+    if ((pid = fork()) < 0)
+        unix_error("Fork error");
+    return pid;
+}
+
+void Sigprocmask(int how, const sigset_t *set, sigset_t *oldset) {
+    if (sigprocmask(how, set, oldset) < 0)
+        unix_error("Sigprocmask error");
+}
+
+void Sigemptyset(sigset_t *set) {
+    if (sigemptyset(set) < 0)
+        unix_error("Sigprocmask error");
+}
+
+void Sigfillset(sigset_t *set) {
+    if (sigfillset(set) < 0)
+        unix_error("Sigfillset error");
+}
+
+void Sigaddset(sigset_t *set, int signum) {
+    if (sigaddset(set, signum) < 0)
+        unix_error("Sigaddset error");
+}
+
+void Execve(const char *filename, char *const argv[], char *const envp[]) {
+    if (execve(filename, argv, envp) < 0) {
+        printf("%s: Command not found\n", argv[0]);
+        exit(-1);
+    }
+}
+
+void Setpgid(pid_t pid, pid_t pgid) {
+    if (setpgid(pid, pgid) < 0) {
+        unix_error("Setpid error");
+    }
+}
+
+void Kill(pid_t pid, int sig) {
+    if (kill(pid, sig) < 0) {
+        unix_error("Kill error");
+    }
 }

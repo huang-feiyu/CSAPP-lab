@@ -1,6 +1,6 @@
 # CMU 15-213
 
-> 本课程仅做 lab 与 exam, 没有看视频。
+> This repository contains lab implementation and some exam solutions.
 
 * Website: [CSAPP](http://csapp.cs.cmu.edu/)
 * Lab: [labs](http://csapp.cs.cmu.edu/3e/labs.html)
@@ -9,7 +9,7 @@
 * Resources
     * Official: [CMU 15-213](https://www.cs.cmu.edu/~213/)
     * Chinese: [九曲阑干·b站](https://www.bilibili.com/video/BV1cD4y1D7uR)
-    * English: [Dr.Dng·b站](https://www.bilibili.com/video/BV1hf4y1P7qW)
+    * English: [CMU classroom·b站](https://www.bilibili.com/video/BV1iW411d7hd/)
     * Project: [yaaangmin·b站](https://www.bilibili.com/video/BV17K4y1N7Q2)
 
 ## Implementation
@@ -20,6 +20,6 @@
 * [lab04](./labs/ArchLab): ArchLab (**2/3**)
 * [lab05](./labs/CacheLab): CacheLab (**55.8/60**)
 * [lab06](./labs/LinkLab): LinkLab (**90/100**)
-* [lab07](./labs/ShellLab): ShellLab
+* [lab07](./labs/ShellLab): ShellLab (**90/90**)
 
 
