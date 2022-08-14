@@ -319,10 +319,18 @@ void sigchld_handler(int sig) {
     pid_t pid;
     int status;
 
-    /* reap all child process */
+    /* reap all child process; option means: return immediately */
     while ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0) {
         if (WIFEXITED(status)) { /* process terminated normally */
             deletejob(jobs, pid);
+        }
+        if (WIFSIGNALED(status)) { /* process terminated by signal */
+            printf("Job [%d] (%d) terminated by signal %d\n", pid2jid(pid), pid, WTERMSIG(status));
+            deletejob(jobs, pid);
+        }
+        if (WIFSTOPPED(status)) { /* process stopped by signal */
+            printf("Job [%d] (%d) stopped by signal %d\n", pid2jid(pid), pid, WSTOPSIG(status));
+            getjobpid(jobs, pid)->state = ST; /* update job state to STOPPED */
         }
     }
 }
@@ -333,8 +341,12 @@ void sigchld_handler(int sig) {
  *    to the foreground job.
  */
 void sigint_handler(int sig) {
-    // TODO:
-    return;
+    pid_t pid = fgpid(jobs);
+
+    /* do nothing if no fg job */
+    if (pid != 0)
+        /* send SIGINT to foreground proces group */
+        Kill(-pid, SIGINT);
 }
 
 /*
@@ -343,8 +355,12 @@ void sigint_handler(int sig) {
  *     foreground job by sending it a SIGTSTP.
  */
 void sigtstp_handler(int sig) {
-    // TODO:
-    return;
+    pid_t pid = fgpid(jobs);
+
+    /* do nothing if no fg job */
+    if (pid != 0)
+        /* send SIGTSTP to foreground proces group */
+        Kill(-pid, SIGTSTP);
 }
 
 /*********************

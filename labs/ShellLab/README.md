@@ -97,3 +97,11 @@ signal race condition, we just need to add `addjob()` to `eval()`.
 
 To avoid race condition: Add `sigprocmask()` in `eval()` to block `SIGCHLD`
 signals to avoid `deletejob()` before `addjob()`.
+
+## trace06 & trace07 & trace08
+
+> Forward SIGINT/SIGTSTP only to foreground job.
+
+**Take a look at CSAPP textbook 8.4.3**.
+
+Fill the handlers and add process to `sigchld_handler()` to reap child.
