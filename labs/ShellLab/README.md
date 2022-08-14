@@ -130,3 +130,6 @@ if (execve(filename, argv, envp) < 0) {
 >   exit(-1);
 }
 ```
+
+-- There must be bugs with signal handling. But it is not worth to fix it.
+So I stop here, and wait for the next update.
