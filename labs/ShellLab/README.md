@@ -8,7 +8,8 @@ before starting this lab.**
 
 ## Prepare
 
-[WriteUp](http://csapp.cs.cmu.edu/3e/shlab.pdf)
+[WriteUp](http://csapp.cs.cmu.edu/3e/shlab.pdf) &
+[Signal Blog](https://github.com/huang-feiyu/Learning-Space/tree/main/Tech-Blog/Signal)
 
 ```bash
 man 2 fork
@@ -105,3 +106,16 @@ signals to avoid `deletejob()` before `addjob()`.
 **Take a look at CSAPP textbook 8.4.3**.
 
 Fill the handlers and add process to `sigchld_handler()` to reap child.
+
+## trace09 & trace10
+
+> Process bg/fg builtin command.
+
+* The *bg* <job> command restarts <job> by sending it a `SIGCONT` signal, and
+then runs it in the background. The <job> argument can be either a PID or a JID.
+* The *fg* <job> command restarts <job> by sending it a `SIGCONT` signal, and
+then runs it in the foreground. The <job> argument can be either a PID or a JID.
+
+1. get <job> according to argument & validate <job>
+2. send `SIGCONT` if valid
+3. do stuff according to *bg* or *fg*

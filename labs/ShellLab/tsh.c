@@ -89,6 +89,8 @@ void app_error(char *msg);
 typedef void handler_t(int);
 handler_t *Signal(int signum, handler_t *handler);
 
+int is_digit_str(const char *str);
+
 /* Error wrapper functions */
 pid_t Fork(void);
 void Sigprocmask(int how, const sigset_t *set, sigset_t *oldset);
@@ -291,8 +293,63 @@ int builtin_cmd(char **argv) {
  * do_bgfg - Execute the builtin bg and fg commands
  */
 void do_bgfg(char **argv) {
-    // TODO:
-    return;
+    /* 1. get <job> according to argument & validate job */
+    struct job_t *job;
+    char *arg_job = argv[1];
+
+    /* validate job: whether there is an argument */
+    if (arg_job == NULL) {
+        printf("%s command requires PID or %%jobid argument\n", argv[0]);
+        return;
+    }
+
+    if (arg_job[0] == '%') { /* get by %jid */
+        arg_job++;
+        if (!is_digit_str(arg_job)) {
+            printf("%s: argument must be a PID or %%jobid\n", argv[0]);
+            return;
+        }
+
+        int jid = atoi(arg_job); /* skip '%' characther */
+        job = getjobjid(jobs, jid);
+        if (job == NULL) {
+            printf("%s: No such job\n", --arg_job);
+            return;
+        }
+    } else { /* get by pid */
+        if (!is_digit_str(arg_job)) {
+            printf("%s: argument must be a PID or %%jobid\n", argv[0]);
+            return;
+        }
+
+        pid_t pid = atoi(arg_job);
+        job = getjobpid(jobs, pid);
+        if (job == NULL) {
+            printf("(%s): No such job\n", arg_job);
+            return;
+        }
+    }
+
+    /* 2. send `SIGCONT` if valid */
+    Kill(-job->pid, SIGCONT);
+
+    /* 3. do stuff according to bg or fg */
+    if (!strcmp(argv[0], "bg")) {
+        job->state = BG;
+        printf("[%d] (%d) %s", job->jid, job->pid, job->cmdline);
+    } else {
+        job->state = FG;
+        waitfg(job->pid);
+    }
+}
+
+int is_digit_str(const char *str) {
+    int len = strlen(str);
+    for (int i = 0; i < len; i++) {
+        if (!isdigit(str[i]))
+            return 0;
+    }
+    return 1;
 }
 
 /*
