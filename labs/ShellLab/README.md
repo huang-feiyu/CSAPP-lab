@@ -80,3 +80,20 @@ Take a look at CSAPP textbook 8.4.6. It's easy to implement.
 
 The two traces need not to **really** implement the `fg` and `bg` built-in commands.
 We just need to fork a child process and run the executable file via `execve()`.
+
+## trace05
+
+> Process jobs builtin command.
+
+**Take a look at CSAPP textbook 8.5.6 & 8.5.7**.
+
+We need to use the job list API to implement `jobs`. If do not care about the
+signal race condition, we just need to add `addjob()` to `eval()`.
+
+`deletejob()` is a little complicated:
+1. background process terminates: `sigchld_handler()`; Use exactly one call to
+`waitpid()`
+2. foreground process terminates: `waitfg()`; Hang via busy `sleep()`
+
+To avoid race condition: Add `sigprocmask()` in `eval()` to block `SIGCHLD`
+signals to avoid `deletejob()` before `addjob()`.

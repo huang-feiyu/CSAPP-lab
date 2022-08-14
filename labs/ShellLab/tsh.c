@@ -181,23 +181,34 @@ void eval(char *cmdline) {
     int bg;              /* should the job run in bg or fg? */
     pid_t pid;           /* process id */
 
+    sigset_t mask_all, mask_one, prev_one; /* bit vector */
+
+    Sigfillset(&mask_all);
+    Sigemptyset(&mask_one);
+    Sigaddset(&mask_one, SIGCHLD);
+
     strcpy(buf, cmdline);
     bg = parseline(buf, argv);
     if (argv[0] == NULL)
         return; /* ignore empty lines */
 
-    if (!builtin_cmd(argv)) {      /* no need to fork if builtin command */
-        if ((pid = Fork()) == 0) { /* child runs user job */
+    if (!builtin_cmd(argv)) {                          /* no need to fork if builtin command */
+        Sigprocmask(SIG_BLOCK, &mask_one, &prev_one);  /* block SIGCHLD in both parent and child */
+        if ((pid = Fork()) == 0) {                     /* child process runs user job */
+            Sigprocmask(SIG_SETMASK, &prev_one, NULL); /* unblock SIGCHLD in child */
+            setpgid(0, 0);                             /* puts the child in a new process group, GID = PID */
             Execve(argv[0], argv, environ);
         }
 
-        /* Parent waits for foreground job to terminate */
-        if (!bg) {
-            int status;
-            if (waitpid(pid, &status, 0) < 0)
-                unix_error("waitfg: waitpid error");
-        } else
-            printf("%d %s", pid, cmdline);
+        Sigprocmask(SIG_BLOCK, &mask_all, NULL);   /* parent process: block all to add job */
+        addjob(jobs, pid, bg ? BG : FG, cmdline);  /* add the child to the job list */
+        Sigprocmask(SIG_SETMASK, &prev_one, NULL); /* unblock SIGCHLD in parent */
+
+        /* parent waits for foreground job to terminate */
+        if (!bg)
+            waitfg(pid);
+        else
+            printf("[%d] (%d) %s", pid2jid(pid), pid, cmdline);
     }
 }
 
@@ -268,6 +279,10 @@ int builtin_cmd(char **argv) {
         do_bgfg(argv);
         return 1;
     }
+    if (!strcmp(argv[0], "jobs")) {
+        listjobs(jobs);
+        return 1;
+    }
 
     return 0; /* not a builtin command */
 }
@@ -284,8 +299,9 @@ void do_bgfg(char **argv) {
  * waitfg - Block until process pid is no longer the foreground process
  */
 void waitfg(pid_t pid) {
-    // TODO:
-    return;
+    /* NOTE: from hint, but CSAPP 8.5.7 is against to this */
+    while (pid == fgpid(jobs))
+        sleep(0);
 }
 
 /*****************
@@ -300,8 +316,15 @@ void waitfg(pid_t pid) {
  *     currently running children to terminate.
  */
 void sigchld_handler(int sig) {
-    // TODO:
-    return;
+    pid_t pid;
+    int status;
+
+    /* reap all child process */
+    while ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0) {
+        if (WIFEXITED(status)) { /* process terminated normally */
+            deletejob(jobs, pid);
+        }
+    }
 }
 
 /*
