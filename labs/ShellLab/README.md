@@ -119,3 +119,14 @@ then runs it in the foreground. The <job> argument can be either a PID or a JID.
 1. get <job> according to argument & validate <job>
 2. send `SIGCONT` if valid
 3. do stuff according to *bg* or *fg*
+
+## others
+
+Stuck at trace14: Simple error handling
+
+```diff
+if (execve(filename, argv, envp) < 0) {
+    printf("%s: Command not found\n", argv[0]);
+>   exit(-1);
+}
+```

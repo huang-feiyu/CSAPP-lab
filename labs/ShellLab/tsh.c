@@ -656,7 +656,8 @@ void Sigaddset(sigset_t *set, int signum) {
 
 void Execve(const char *filename, char *const argv[], char *const envp[]) {
     if (execve(filename, argv, envp) < 0) {
-        printf("%s: Command not found.\n", argv[0]);
+        printf("%s: Command not found\n", argv[0]);
+        exit(-1);
     }
 }
 
