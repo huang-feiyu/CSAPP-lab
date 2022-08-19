@@ -30,4 +30,7 @@ Helper functions:
 In this version of implementation, I will use the textbook implementation to
 fully understand the allocator. For further details, please refer to the textbook.
 
-If we do not optimize the version of the allocator, we got **63**.
+| Placement Policy | Score |
+|------------------|-------|
+| First Fit        | 63    |
+| Next Fit         | 84    |
