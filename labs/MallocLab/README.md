@@ -88,6 +88,16 @@ Abstract:
 * T: Tail
 ```
 
+---
+
+| Time | Score | Description       |
+|------|-------|-------------------|
+| 1st  | 85    | Naive realloc     |
+| 2st  | 89    | Optimized realloc |
+| 3st  | 90    | Optimized realloc |
+
+END: Perf index = 50 (util) + 40 (thru) = 90/100
+
 ### Debug
 
 <strong>*</strong> `mm_malloc()` fails => bug01
@@ -106,3 +116,5 @@ static void *find_fit(size_t asize) {
 ```
 
 <strong>*</strong> `mm_check()` header does not match footer => bug02
+
+I cannot find the bug...

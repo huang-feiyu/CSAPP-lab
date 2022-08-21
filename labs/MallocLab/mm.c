@@ -62,7 +62,7 @@ team_t team = {
 #define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
 
 // =========================MACROS=============================================
-#define DEBUG
+//#define DEBUG
 
 /* Basic constants and macros */
 #define WSIZE 4             /* Word and header/footer size (bytes) */
@@ -148,9 +148,6 @@ void *mm_malloc(size_t size) {
 #ifdef DEBUG
     mm_check(1);
 #endif
-    if (heap_listp == 0) {
-        mm_init();
-    }
     /* Ignore spurious requests */
     if (size == 0)
         return NULL;
@@ -186,8 +183,6 @@ void *mm_malloc(size_t size) {
  * mm_free - Free a block
  */
 void mm_free(void *bp) {
-    if (heap_listp == NULL)
-        mm_init();
     if (bp == NULL)
         return;
 
@@ -198,12 +193,13 @@ void mm_free(void *bp) {
 }
 
 /*
- * mm_realloc - Naive implementation of realloc
+ * mm_realloc - Optimized implementation of realloc
+ *
+ * Little optimization:
+ *     if next block is free and {next block size + current block size} >= new size,
+ *     then merge the two blocks.
  */
 void *mm_realloc(void *ptr, size_t size) {
-    size_t oldsize;
-    void *newptr;
-
     /* If size == 0 then this is just free, and we return NULL. */
     if (size == 0) {
         mm_free(ptr);
@@ -214,22 +210,41 @@ void *mm_realloc(void *ptr, size_t size) {
     if (ptr == NULL)
         return mm_malloc(size);
 
-    newptr = mm_malloc(size);
+    size_t oldsize = GET_SIZE(HDRP(ptr));
+    size_t newsize = size <= DSIZE ? MINSIZE : DSIZE * ((size + (DSIZE) + (DSIZE - 1)) / DSIZE);
+    void *newptr;
 
-    /* If realloc() fails the original block is left untouched  */
-    if (!newptr)
-        return 0;
+    if (newsize <= oldsize) {
+        return ptr;
+    } else {
+        size_t n_size = GET_SIZE(HDRP(NEXT_BLKP(ptr)));
+        size_t n_alloc = GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
+        size_t p_size = GET_SIZE(HDRP(PREV_BLKP(ptr)));
+        size_t p_alloc = GET_ALLOC(HDRP(PREV_BLKP(ptr)));
+        size_t free_size;
 
-    /* Copy the old data. */
-    oldsize = GET_SIZE(HDRP(ptr));
-    if (size < oldsize)
-        oldsize = size;
-    memcpy(newptr, ptr, oldsize);
+        if (!n_alloc && (free_size = n_size + oldsize) >= newsize) {
+            del_free_list(NEXT_BLKP(ptr));
+            PUT(HDRP(ptr), PACK(free_size, 1));
+            PUT(FTRP(ptr), PACK(free_size, 1));
+            return ptr;
+        } else if (!p_alloc && (free_size = p_size + oldsize) >= newsize) {
+            // DEBUG: Cannot free current ptr, because there is four pointers around the ptr and newptr.
+            //del_free_list(ptr);
+            newptr = PREV_BLKP(ptr);
 
-    /* Free the old block. */
-    mm_free(ptr);
-
-    return newptr;
+            PUT(HDRP(newptr), PACK(free_size, 1));
+            PUT(FTRP(newptr), PACK(free_size, 1));
+            memcpy(newptr + WSIZE, ptr + WSIZE, oldsize - WSIZE);
+            return newptr;
+        } else {
+            newptr = mm_malloc(newsize);
+            place(newptr, newsize);
+            memcpy(newptr, ptr, oldsize);
+            mm_free(ptr);
+            return newptr;
+        }
+    }
 }
 
 /**
@@ -375,7 +390,6 @@ static void del_free_list(void *bp) {
 static void printblock(void *bp) {
     size_t hsize, halloc, fsize, falloc;
 
-//    checkheap(0);
     hsize = GET_SIZE(HDRP(bp));
     halloc = GET_ALLOC(HDRP(bp));
     fsize = GET_SIZE(FTRP(bp));
