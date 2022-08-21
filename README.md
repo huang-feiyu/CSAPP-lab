@@ -21,5 +21,6 @@
 * [lab05](./labs/CacheLab): CacheLab (**55.8/60**)
 * [lab06](./labs/LinkLab): LinkLab (**90/100**)
 * [lab07](./labs/ShellLab): ShellLab (**90/90**)
+* [lab08](./labs/MallocLab): MallocLab (**90/100**)
 
 
