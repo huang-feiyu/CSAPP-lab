@@ -7,3 +7,7 @@ core
 *.gzip
 *.bzip
 *.gz
+tiny/tiny
+tiny/cgi-bin
+.noproxy
+.proxy
