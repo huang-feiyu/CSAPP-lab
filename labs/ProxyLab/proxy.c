@@ -13,6 +13,7 @@
 
 static const char *user_agent_hdr = "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3) Gecko/20120305 Firefox/10.0.3\r\n";
 
+void *Tdoit(void *vargp);
 void doit(int fd);
 void write_requesthdrs(rio_t *rio, char *req_str, char *hostname, char *path, char *port);
 void parse_uri(char *uri, char *hostname, char *path, int *port);
@@ -28,6 +29,7 @@ int main(int argc, char **argv) {
     char hostname[MAXLINE], port[MAXLINE];
     socklen_t clientlen;
     struct sockaddr_storage clientaddr;
+    pthread_t tid;
 
     /* 1. Listen for incoming connections on a port */
     listenfd = Open_listenfd(argv[1]);
@@ -41,11 +43,20 @@ int main(int argc, char **argv) {
 #ifdef DEBUG
         printf("\nAccepted connection from (%s, %s)\n", hostname, port);
 #endif
-
-        doit(connfd); // do stuff
-
-        Close(connfd);
+        Pthread_create(&tid, NULL, Tdoit, (void *) &connfd);
     }
+}
+
+/*
+ * Tdoit - Thread routine for handling each client connection
+ */
+void *Tdoit(void *vargp) {
+    Pthread_detach(pthread_self());
+
+    int connfd = *((int *) vargp);
+    doit(connfd);
+    Close(connfd);
+    return NULL;
 }
 
 /*

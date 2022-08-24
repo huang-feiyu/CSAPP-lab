@@ -26,4 +26,12 @@ Take a look at [tiny](./tiny/tiny.c), just need to do a few things:
 Get a request from *client* and parse it, build a request to *end* server, and
 send it. Read from *end* server and send it to *client*.
 
-Easy to get 40 scores.
+Easy to get 40 points.
+
+## Part II
+
+> Dealing with multiple concurrent requests
+
+Just need to spawn a new thread to handle each new connection request.
+
+Got 15 more points.
