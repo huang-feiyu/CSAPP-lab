@@ -35,3 +35,10 @@ Easy to get 40 points.
 Just need to spawn a new thread to handle each new connection request.
 
 Got 15 more points.
+
+## Part III
+
+> Caching web objects
+
+Naive approach: We gonna only maintain 10 cache objects, each size is 1KiB.<br/>
+Use reader-first Reader-Writer Model, take a look at CS:APP Figure 12-26.

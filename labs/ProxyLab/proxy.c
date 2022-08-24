@@ -3,13 +3,28 @@
  */
 
 #include <stdio.h>
+#include <assert.h>
 #include "csapp.h"
 
-//#define DEBUG
+#define DEBUG
 
 /* Recommended max cache and object sizes */
 #define MAX_CACHE_SIZE 1049000
 #define MAX_OBJECT_SIZE 102400
+
+typedef struct {
+    char *uri;
+    char *obj;
+} CacheLine;
+
+typedef struct {
+    int used_cnt;
+    CacheLine *objects;
+} Cache;
+
+Cache cache;
+int readcnt;
+sem_t mutex, w;
 
 static const char *user_agent_hdr = "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3) Gecko/20120305 Firefox/10.0.3\r\n";
 
@@ -18,12 +33,17 @@ void doit(int fd);
 void write_requesthdrs(rio_t *rio, char *req_str, char *hostname, char *path, char *port);
 void parse_uri(char *uri, char *hostname, char *path, int *port);
 void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
+void init_cache(void);
+int reader(int fd, char *uri);
+void writer(char *uri, char *buf);
 
 int main(int argc, char **argv) {
     if (argc != 2) {
         fprintf(stderr, "usage: %s <port>\n", argv[0]);
         exit(1);
     }
+
+    init_cache();
 
     int listenfd, connfd;
     char hostname[MAXLINE], port[MAXLINE];
@@ -51,9 +71,8 @@ int main(int argc, char **argv) {
  * Tdoit - Thread routine for handling each client connection
  */
 void *Tdoit(void *vargp) {
-    Pthread_detach(pthread_self());
-
     int connfd = *((int *) vargp);
+    Pthread_detach(pthread_self());
     doit(connfd);
     Close(connfd);
     return NULL;
@@ -89,6 +108,13 @@ void doit(int fd) {
     char port_str[6];
     sprintf(port_str, "%d", port);
 
+    if (reader(fd, uri)) {
+#ifdef DEBUG
+        printf("Read from cache\n");
+#endif
+        return;
+    }
+
     /* 3. If the request is valid, establish a connection to the *end* server */
     int endfd, n;
     rio_t rio_end;
@@ -106,9 +132,23 @@ void doit(int fd) {
     write_requesthdrs(&rio, new_request, hostname, path, port_str);
 
     /* 4. Read *end* server's response and forward it to *client* */
+    size_t obj_size = 0;
+    char *obj = (char *) Malloc(MAX_OBJECT_SIZE * sizeof(char));
+
     Rio_writen(endfd, new_request, strlen(new_request));
     while ((n = Rio_readlineb(&rio_end, buf, MAXLINE)) != 0) {
         Rio_writen(fd, buf, n);
+        if (obj_size < MAX_OBJECT_SIZE) {
+            memcpy(obj + obj_size, buf, n);
+            obj_size += n;
+        }
+    }
+
+    if (obj_size < MAX_OBJECT_SIZE) {
+        writer(uri, obj);
+#ifdef DEBUG
+        printf("Write to cache");
+#endif
     }
 
     Close(endfd);
@@ -208,4 +248,85 @@ void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longms
     Rio_writen(fd, buf, strlen(buf));
     sprintf(buf, "<hr><em>The Proxy server</em>\r\n");
     Rio_writen(fd, buf, strlen(buf));
+}
+
+/*
+ * init_cache - Init global cache object
+ */
+void init_cache(void) {
+    Sem_init(&mutex, 0, 1);
+    Sem_init(&w, 0, 1);
+    readcnt = 0;
+    cache.objects = (CacheLine *) Malloc(10 * sizeof(CacheLine));
+    cache.used_cnt = 0;
+
+    assert(MAX_OBJECT_SIZE * 10 < MAX_CACHE_SIZE);
+    for (int i = 0; i < 10; ++i) {
+        cache.objects[i].uri = (char *) Malloc(MAXLINE * sizeof(char));
+        cache.objects[i].obj = (char *) Malloc(MAX_OBJECT_SIZE * sizeof(char));
+    }
+}
+
+/*
+ * reader - reader to get object
+ *          return 1 if object in cache, 0 otherwise
+ */
+int reader(int fd, char *uri) {
+#ifdef DEBUG
+    printf("\n==Reader==\n");
+#endif
+    int flag = 0; // whether the object in cache
+    P(&mutex);
+    readcnt++;
+    if (readcnt == 1) { // First in
+        P(&w);
+    }
+    V(&mutex);
+
+    // Critical section: Reading happens
+#ifdef DEBUG
+    printf("Reader: Enter Critical section\n");
+#endif
+    for (int i = 0; i < 10; ++i) {
+        if (!strcmp(cache.objects[i].uri, uri)) {
+            // write to client file descriptor
+            Rio_writen(fd, cache.objects[i].obj, MAXLINE);
+            flag = 1;
+            break;
+        }
+    }
+
+    P(&mutex);
+    readcnt--;
+    if (readcnt == 0) { // Last out
+        V(&w);
+    }
+    V(&mutex);
+#ifdef DEBUG
+    printf("Reader: End\n");
+#endif
+    return flag;
+}
+
+/*
+ * writer - write to specific object
+ */
+void writer(char *uri, char *buf) {
+#ifdef DEBUG
+    printf("\n==Writer==\n");
+#endif
+    P(&w);
+
+    // Critical section: Writing happens
+#ifdef DEBUG
+    printf("Writer: Enter Critical section\n");
+#endif
+    strcpy(cache.objects[cache.used_cnt].uri, uri);
+    strcpy(cache.objects[cache.used_cnt].obj, buf);
+    cache.used_cnt++;
+
+    V(&w);
+#ifdef DEBUG
+    printf("Writer: End\n");
+#endif
 }
