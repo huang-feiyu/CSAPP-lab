@@ -1,0 +1,13 @@
+*~
+*.o
+proxy
+core
+*.tar
+*.zip
+*.gzip
+*.bzip
+*.gz
+tiny/tiny
+tiny/cgi-bin
+.noproxy
+.proxy
