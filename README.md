@@ -22,6 +22,6 @@
 * [lab06](./labs/LinkLab): LinkLab (**90/100**)
 * [lab07](./labs/ShellLab): ShellLab (**90/90**)
 * [lab08](./labs/MallocLab): MallocLab (**90/100**)
-* [lab09](./labs/ProxyLab): ProxyLab
+* [lab09](./labs/ProxyLab): ProxyLab (**70/70**)
 
 
