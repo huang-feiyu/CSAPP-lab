@@ -57,24 +57,6 @@ Assembly code of `fizz`:
  804944b:	a1 90 d1 04 08       	mov    0x804d190,%eax
  8049450:	39 c2                	cmp    %eax,%edx      # check if %edx equals to cookie locating in 0x804d190
  8049452:	75 22                	jne    8049476 <fizz+0x34>
- 8049454:	83 ec 08             	sub    $0x8,%esp
- 8049457:	ff 75 08             	push   0x8(%ebp)
- 804945a:	68 23 b0 04 08       	push   $0x804b023
- 804945f:	e8 1c fc ff ff       	call   8049080 <printf@plt> # print fizz
- 8049464:	83 c4 10             	add    $0x10,%esp
- 8049467:	83 ec 0c             	sub    $0xc,%esp
- 804946a:	6a 01                	push   $0x1
- 804946c:	e8 6f 09 00 00       	call   8049de0 <validate>
- 8049471:	83 c4 10             	add    $0x10,%esp
- 8049474:	eb 13                	jmp    8049489 <fizz+0x47>
- 8049476:	83 ec 08             	sub    $0x8,%esp
- 8049479:	ff 75 08             	push   0x8(%ebp)
- 804947c:	68 44 b0 04 08       	push   $0x804b044
- 8049481:	e8 fa fb ff ff       	call   8049080 <printf@plt> # print buzz, which is wrong
- 8049486:	83 c4 10             	add    $0x10,%esp
- 8049489:	83 ec 0c             	sub    $0xc,%esp
- 804948c:	6a 00                	push   $0x0
- 804948e:	e8 bd fc ff ff       	call   8049150 <exit@plt>
 ```
 
 * 0~49: nothing
@@ -109,26 +91,6 @@ Assembly code of `bang`:
  80494a0:	a1 90 d1 04 08       	mov    0x804d190,%eax
  80494a5:	39 c2                	cmp    %eax,%edx           # compare *0x804d198 and *0x804d190
  80494a7:	75 25                	jne    80494ce <bang+0x3b>
- 80494a9:	a1 98 d1 04 08       	mov    0x804d198,%eax
- 80494ae:	83 ec 08             	sub    $0x8,%esp
- 80494b1:	50                   	push   %eax
- 80494b2:	68 64 b0 04 08       	push   $0x804b064
- 80494b7:	e8 c4 fb ff ff       	call   8049080 <printf@plt>
- 80494bc:	83 c4 10             	add    $0x10,%esp
- 80494bf:	83 ec 0c             	sub    $0xc,%esp
- 80494c2:	6a 02                	push   $0x2
- 80494c4:	e8 17 09 00 00       	call   8049de0 <validate>
- 80494c9:	83 c4 10             	add    $0x10,%esp
- 80494cc:	eb 16                	jmp    80494e4 <bang+0x51>
- 80494ce:	a1 98 d1 04 08       	mov    0x804d198,%eax
- 80494d3:	83 ec 08             	sub    $0x8,%esp
- 80494d6:	50                   	push   %eax
- 80494d7:	68 89 b0 04 08       	push   $0x804b089
- 80494dc:	e8 9f fb ff ff       	call   8049080 <printf@plt>
- 80494e1:	83 c4 10             	add    $0x10,%esp
- 80494e4:	83 ec 0c             	sub    $0xc,%esp
- 80494e7:	6a 00                	push   $0x0
- 80494e9:	e8 62 fc ff ff       	call   8049150 <exit@plt>
 ```
 
 According to gdb, <global_value> locates in `0x804d198`, while <cookie> locates in `0x804d190`.
@@ -250,8 +212,6 @@ Check the value of `%ebp` each time:
 
 
 sizeof(string) = 0x300 + 4 + 4 = 776
-
-buf 0x300:
 
 * 0~756: nop
 * 757~771: assembly code
