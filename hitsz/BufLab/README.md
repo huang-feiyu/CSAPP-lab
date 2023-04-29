@@ -183,21 +183,6 @@ push	$0x08049579
 ret
 ```
 
-```assembly
-08049c2e <getbufn>:
- 8049c2e:	55                   	push   %ebp
- 8049c2f:	89 e5                	mov    %esp,%ebp
- 8049c31:	81 ec 08 03 00 00    	sub    $0x308,%esp
- 8049c37:	83 ec 0c             	sub    $0xc,%esp
- 8049c3a:	8d 85 00 fd ff ff    	lea    -0x300(%ebp),%eax
- 8049c40:	50                   	push   %eax
- 8049c41:	e8 3c fa ff ff       	call   8049682 <Gets>
- 8049c46:	83 c4 10             	add    $0x10,%esp
- 8049c49:	b8 01 00 00 00       	mov    $0x1,%eax
- 8049c4e:	c9                   	leave
- 8049c4f:	c3                   	ret
-```
-
 Check the value of `%ebp` each time:
 
 | No   | ebp        | ebp-0x300  |
