@@ -77,9 +77,10 @@ Assembly code of `fizz`:
  804948e:	e8 bd fc ff ff       	call   8049150 <exit@plt>
 ```
 
-Similarly, the first 50 bytes mean nothing. 50~53 mean the address of `fizz` which is `08049442`.
-54~57 mean nothing. 58~61 mean the cookie `20ba0521`.
-Therefore, the string should be:
+* 0~49: nothing
+* 50~53: address of fiz
+* 54~57: nothing
+* 58~61: cookie
 
 ```
 00 00 00 00 00 00 00 00
