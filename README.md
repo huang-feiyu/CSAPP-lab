@@ -24,4 +24,7 @@
 * [lab08](./labs/MallocLab): MallocLab (**90/100**)
 * [lab09](./labs/ProxyLab): ProxyLab (**70/70**)
 
+## HITsz labs
+
+* [lab01](./hitsz/BufLab): BufLab (from CSAPP 2e)
 
